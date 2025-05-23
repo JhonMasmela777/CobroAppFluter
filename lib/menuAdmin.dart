@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hola_mundo/baseDatosAdmin.dart';
 import 'package:hola_mundo/crearClienteAdmin.dart';
 import 'package:hola_mundo/crearUsuario.dart';
+import 'package:hola_mundo/gestionarCreditoAdmin.dart';
 
 class MenuAdmin extends StatelessWidget {
   const MenuAdmin({super.key});
@@ -32,7 +34,18 @@ class MenuAdmin extends StatelessWidget {
               context,
               MaterialPageRoute(builder: (context) => CrearClienteAdmin()),
             );
+          } else if (texto == 'Base De Datos') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => BaseDatosAdmin()),
+            );
+          } else if (texto == 'Gestión De Créditos') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => GestionCreditosAdmin()),
+            );
           }
+
           // Puedes agregar más condiciones si luego quieres navegar a otras pantallas
         },
       ),
