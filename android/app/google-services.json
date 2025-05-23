@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "570242483817",
+    "project_id": "cobro-6536f",
+    "storage_bucket": "cobro-6536f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:570242483817:android:ea018be649f2b73585c4f8",
+        "android_client_info": {
+          "package_name": "com.example.mi_app_nueva"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBnLQeb1qmxIdrlXqn2CPr28Ib_w5ii18Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
