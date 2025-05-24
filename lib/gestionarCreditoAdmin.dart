@@ -1,23 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class GestionCreditosAdmin extends StatelessWidget {
+class GestionCreditosAdmin extends StatefulWidget {
+  @override
+  State<GestionCreditosAdmin> createState() => _GestionCreditosAdminState();
+}
+
+class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
   final CollectionReference creditosRef = FirebaseFirestore.instance.collection(
     'creditos',
+  );
+  final CollectionReference clientesRef = FirebaseFirestore.instance.collection(
+    'clientes',
+  );
+  final CollectionReference usuariosRef = FirebaseFirestore.instance.collection(
+    'usuarios',
   );
 
   Future<void> actualizarEstado(String docId, String nuevoEstado) async {
     await creditosRef.doc(docId).update({'estado': nuevoEstado});
   }
 
+  Future<void> asignarCobrador(String creditoId, String cedulaCobrador) async {
+    await creditosRef.doc(creditoId).update({
+      'cedulaCobradorAsignado': cedulaCobrador,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> obtenerUsuariosCobradores() async {
+    final snapshot = await usuariosRef.where('rol', isEqualTo: 'usuario').get();
+    return snapshot.docs
+        .map((doc) => doc.data() as Map<String, dynamic>)
+        .toList();
+  }
+
+  Future<String> obtenerNombreCliente(String idCliente) async {
+    try {
+      final querySnapshot =
+          await clientesRef
+              .where('cedula', isEqualTo: idCliente)
+              .limit(1)
+              .get();
+      if (querySnapshot.docs.isNotEmpty) {
+        final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
+        return data['nombreCompleto'] ?? 'Sin nombre';
+      } else {
+        return 'Cliente no encontrado';
+      }
+    } catch (e) {
+      return 'Error al obtener nombre';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFDFFFEF), // Verde claro como en el menú
+      backgroundColor: Color(0xFFDFFFEF),
       appBar: AppBar(
-        backgroundColor: Color(
-          0xFF00C290,
-        ), // Verde oscuro como en el encabezado del menú
+        backgroundColor: Color(0xFF00C290),
         title: Text(
           'Gestión De Créditos',
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
@@ -40,6 +80,11 @@ class GestionCreditosAdmin extends StatelessWidget {
               final credito = creditos[index];
               final docId = credito.id;
               final estado = credito['estado'];
+              final idCliente = credito['idCliente'];
+              final asignadoA =
+                  credito.data().toString().contains('cedulaCobradorAsignado')
+                      ? credito['cedulaCobradorAsignado']
+                      : 'Sin asignar';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
@@ -59,21 +104,33 @@ class GestionCreditosAdmin extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Cliente ID: ${credito['idCliente']}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.indigo,
-                        ),
+                      FutureBuilder<String>(
+                        future: obtenerNombreCliente(idCliente),
+                        builder: (context, snapshotNombre) {
+                          if (snapshotNombre.connectionState ==
+                              ConnectionState.waiting) {
+                            return Text('Cargando cliente...');
+                          }
+                          final nombreCliente =
+                              snapshotNombre.data ?? 'Sin nombre';
+                          return Text(
+                            'Cliente: $idCliente - $nombreCliente',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Colors.indigo,
+                            ),
+                          );
+                        },
                       ),
                       SizedBox(height: 8),
                       Text('Artículo: ${credito['articulo']}'),
                       Text('Deuda: \$${credito['deuda']}'),
                       Text('Frecuencia de pago: ${credito['frecuenciaPago']}'),
                       Text('Estado actual: $estado'),
+                      Text('Asignado a: $asignadoA'),
                       SizedBox(height: 16),
-                      if (estado == 'pendiente')
+                      if (estado == 'pendiente') ...[
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
@@ -110,8 +167,62 @@ class GestionCreditosAdmin extends StatelessWidget {
                               ),
                             ),
                           ],
-                        )
-                      else
+                        ),
+                        SizedBox(height: 10),
+                        if (asignadoA == 'Sin asignar')
+                          FutureBuilder<List<Map<String, dynamic>>>(
+                            future: obtenerUsuariosCobradores(),
+                            builder: (context, snapshotUsuarios) {
+                              if (!snapshotUsuarios.hasData)
+                                return CircularProgressIndicator();
+                              final usuarios = snapshotUsuarios.data!;
+                              return DropdownButtonFormField<String>(
+                                hint: Text("Asignar cobrador"),
+                                onChanged: (cedulaSeleccionada) {
+                                  if (cedulaSeleccionada != null) {
+                                    asignarCobrador(
+                                      docId,
+                                      cedulaSeleccionada,
+                                    ).then((_) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Cobrador asignado correctamente',
+                                          ),
+                                        ),
+                                      );
+                                      setState(
+                                        () {},
+                                      ); // refrescar para actualizar UI
+                                    });
+                                  }
+                                },
+                                items:
+                                    usuarios.map((usuario) {
+                                      return DropdownMenuItem<String>(
+                                        value: usuario['cedula'],
+                                        child: Text(
+                                          '${usuario['nombre']} (${usuario['cedula']})',
+                                        ),
+                                      );
+                                    }).toList(),
+                              );
+                            },
+                          )
+                        else
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              'Cobrador asignado: $asignadoA',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ),
+                      ] else
                         Center(
                           child: Text(
                             'Estado finalizado: $estado',

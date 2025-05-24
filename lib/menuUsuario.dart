@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hola_mundo/cobroUsuario.dart';
 import 'package:hola_mundo/crearClienteAdmin.dart';
 import 'package:hola_mundo/perfilUsuario.dart';
+import 'package:hola_mundo/globals.dart';
 
 class MenuUsuario extends StatelessWidget {
   const MenuUsuario({super.key});
@@ -31,6 +33,16 @@ class MenuUsuario extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => PerfilUsuario()),
+            );
+          } else if (texto == 'Cobros Del Día') {
+            // Supón que tienes la cédula guardada en alguna variable, ejemplo:
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => CobrosUsuario(cedulaCobrador: cedulaLogueada),
+              ),
             );
           }
         },

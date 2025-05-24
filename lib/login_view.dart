@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hola_mundo/menuAdmin.dart';
 import 'package:hola_mundo/menuUsuario.dart';
-import 'globals.dart' as globals; // Importa la variable global
+import 'package:hola_mundo/globals.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -28,11 +28,8 @@ class _LoginViewState extends State<LoginView> {
 
       if (snapshot.docs.isNotEmpty) {
         final userData = snapshot.docs.first.data() as Map<String, dynamic>;
-
-        // Guarda la cédula del usuario logueado en variable global
-        globals.cedulaLogueada = userData['cedula'];
-
         final rol = userData['rol'];
+        cedulaLogueada = userData['cedula'];
 
         if (rol == 'administrador') {
           Navigator.pushReplacement(
