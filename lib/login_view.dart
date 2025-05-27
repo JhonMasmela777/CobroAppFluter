@@ -17,6 +17,8 @@ class _LoginViewState extends State<LoginView> {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  String cedulaUsuario = '';
+
   Future<void> login() async {
     try {
       final QuerySnapshot snapshot =
@@ -29,7 +31,7 @@ class _LoginViewState extends State<LoginView> {
       if (snapshot.docs.isNotEmpty) {
         final userData = snapshot.docs.first.data() as Map<String, dynamic>;
         final rol = userData['rol'];
-        cedulaLogueada = userData['cedula'];
+        cedulaLogueada = userData['cedula']; // Variable global, si usas
 
         if (rol == 'administrador') {
           Navigator.pushReplacement(
@@ -37,9 +39,12 @@ class _LoginViewState extends State<LoginView> {
             MaterialPageRoute(builder: (context) => MenuAdmin()),
           );
         } else if (rol == 'usuario') {
+          cedulaUsuario = userData['cedula']; // <-- Aquí asignas la cédula
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const MenuUsuario()),
+            MaterialPageRoute(
+              builder: (context) => MenuUsuario(clienteCedula: cedulaUsuario),
+            ),
           );
         } else {
           showError('Rol desconocido');
@@ -61,7 +66,7 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE8FFF7), // fondo verdoso claro
+      backgroundColor: const Color(0xFFE8FFF7),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 30),

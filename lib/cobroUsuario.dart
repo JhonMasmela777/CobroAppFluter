@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:hola_mundo/globals.dart';
+import 'package:hola_mundo/PagoUsuario.dart';
 
 class CobrosUsuario extends StatelessWidget {
   final String cedulaCobrador;
@@ -14,9 +14,9 @@ class CobrosUsuario extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFDFFFEF), // Color de fondo suave
+      backgroundColor: const Color(0xFFDFFFEF),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF00C290), // Color verde similar
+        backgroundColor: const Color(0xFF00C290),
         title: Text(
           'Cobros de $cedulaCobrador',
           style: const TextStyle(
@@ -52,6 +52,14 @@ class CobrosUsuario extends StatelessWidget {
             itemCount: creditos.length,
             itemBuilder: (context, index) {
               final credito = creditos[index];
+              final data = credito.data() as Map<String, dynamic>;
+
+              final creditoId = credito.id;
+              final articulo = data['articulo'] ?? 'Sin nombre';
+              final deuda = (data['deuda'] ?? 0).toDouble();
+              final estado = data['estado'] ?? 'Sin estado';
+              final idCliente = data['idCliente'] ?? '';
+
               return Container(
                 margin: const EdgeInsets.symmetric(
                   horizontal: 15,
@@ -75,15 +83,38 @@ class CobrosUsuario extends StatelessWidget {
                   ),
                   leading: const Icon(Icons.attach_money, color: Colors.green),
                   title: Text(
-                    'Artículo: ${credito['articulo']}',
+                    'Artículo: $articulo',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
                   ),
                   subtitle: Text(
-                    'Deuda: \$${credito['deuda']} - Estado: ${credito['estado']}',
+                    'Deuda: \$${deuda.toStringAsFixed(2)} - Estado: $estado',
                     style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                  trailing: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00C290),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => PagoUsuario(
+                                creditoId: creditoId,
+                                deudaActual: deuda,
+                                clienteCedula: idCliente,
+                              ),
+                        ),
+                      );
+                    },
+                    child: const Text('Generar Pago'),
                   ),
                 ),
               );
