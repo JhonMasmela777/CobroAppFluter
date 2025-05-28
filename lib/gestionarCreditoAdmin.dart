@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GestionCreditosAdmin extends StatefulWidget {
   @override
-  State<GestionCreditosAdmin> createState() => _GestionCreditosAdminState();
+  _GestionCreditosAdminState createState() => _GestionCreditosAdminState();
 }
 
 class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
@@ -17,21 +17,63 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
     'usuarios',
   );
 
+  List<Map<String, dynamic>> cobradores = [];
+  bool cargandoCobradores = true;
+
+  @override
+  void initState() {
+    super.initState();
+    cargarCobradores();
+  }
+
+  Future<void> cargarCobradores() async {
+    try {
+      final snapshot =
+          await usuariosRef.where('rol', isEqualTo: 'usuario').get();
+      final lista =
+          snapshot.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            data['id'] = data['uid']; // ← ahora se usa el campo uid
+            return data;
+          }).toList();
+      setState(() {
+        cobradores = lista;
+        cargandoCobradores = false;
+      });
+    } catch (e) {
+      setState(() {
+        cargandoCobradores = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error cargando cobradores: $e')));
+    }
+  }
+
   Future<void> actualizarEstado(String docId, String nuevoEstado) async {
-    await creditosRef.doc(docId).update({'estado': nuevoEstado});
+    try {
+      await creditosRef.doc(docId).update({'estado': nuevoEstado});
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al actualizar estado: $e')));
+    }
   }
 
-  Future<void> asignarCobrador(String creditoId, String cedulaCobrador) async {
-    await creditosRef.doc(creditoId).update({
-      'cedulaCobradorAsignado': cedulaCobrador,
-    });
-  }
-
-  Future<List<Map<String, dynamic>>> obtenerUsuariosCobradores() async {
-    final snapshot = await usuariosRef.where('rol', isEqualTo: 'usuario').get();
-    return snapshot.docs
-        .map((doc) => doc.data() as Map<String, dynamic>)
-        .toList();
+  Future<void> asignarCobrador(String creditoId, String idCobrador) async {
+    try {
+      await creditosRef.doc(creditoId).update({
+        'cedulaCobradorAsignado': idCobrador,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Cobrador asignado correctamente')),
+      );
+      setState(() {});
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error al asignar cobrador: $e')));
+    }
   }
 
   Future<String> obtenerNombreCliente(String idCliente) async {
@@ -64,6 +106,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
         ),
         centerTitle: true,
         elevation: 0,
+        automaticallyImplyLeading: false, // Sin botón de volver atrás
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: creditosRef.snapshots(),
@@ -72,6 +115,8 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
             return Center(child: CircularProgressIndicator());
 
           final creditos = snapshot.data!.docs;
+          if (creditos.isEmpty)
+            return Center(child: Text('No hay créditos registrados.'));
 
           return ListView.builder(
             padding: EdgeInsets.all(16),
@@ -81,6 +126,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
               final docId = credito.id;
               final estado = credito['estado'];
               final idCliente = credito['idCliente'];
+
               final asignadoA =
                   credito.data().toString().contains('cedulaCobradorAsignado')
                       ? credito['cedulaCobradorAsignado']
@@ -108,9 +154,10 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                         future: obtenerNombreCliente(idCliente),
                         builder: (context, snapshotNombre) {
                           if (snapshotNombre.connectionState ==
-                              ConnectionState.waiting) {
+                              ConnectionState.waiting)
                             return Text('Cargando cliente...');
-                          }
+                          if (snapshotNombre.hasError)
+                            return Text('Error al cargar cliente');
                           final nombreCliente =
                               snapshotNombre.data ?? 'Sin nombre';
                           return Text(
@@ -169,49 +216,27 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                           ],
                         ),
                         SizedBox(height: 10),
-                        if (asignadoA == 'Sin asignar')
-                          FutureBuilder<List<Map<String, dynamic>>>(
-                            future: obtenerUsuariosCobradores(),
-                            builder: (context, snapshotUsuarios) {
-                              if (!snapshotUsuarios.hasData)
-                                return CircularProgressIndicator();
-                              final usuarios = snapshotUsuarios.data!;
-                              return DropdownButtonFormField<String>(
+                        if (asignadoA == 'Sin asignar') ...[
+                          cargandoCobradores
+                              ? Center(child: CircularProgressIndicator())
+                              : DropdownButtonFormField<String>(
                                 hint: Text("Asignar cobrador"),
-                                onChanged: (cedulaSeleccionada) {
-                                  if (cedulaSeleccionada != null) {
-                                    asignarCobrador(
-                                      docId,
-                                      cedulaSeleccionada,
-                                    ).then((_) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Cobrador asignado correctamente',
-                                          ),
-                                        ),
-                                      );
-                                      setState(
-                                        () {},
-                                      ); // refrescar para actualizar UI
-                                    });
+                                onChanged: (idSeleccionado) {
+                                  if (idSeleccionado != null) {
+                                    asignarCobrador(docId, idSeleccionado);
                                   }
                                 },
                                 items:
-                                    usuarios.map((usuario) {
+                                    cobradores.map((usuario) {
                                       return DropdownMenuItem<String>(
-                                        value: usuario['cedula'],
+                                        value: usuario['id'],
                                         child: Text(
                                           '${usuario['nombre']} (${usuario['cedula']})',
                                         ),
                                       );
                                     }).toList(),
-                              );
-                            },
-                          )
-                        else
+                              ),
+                        ] else
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Text(

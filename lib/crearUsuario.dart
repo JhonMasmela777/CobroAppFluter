@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CrearUsuario extends StatefulWidget {
+  final String adminId;
+
+  const CrearUsuario({Key? key, required this.adminId}) : super(key: key);
+
   @override
   _CrearUsuarioState createState() => _CrearUsuarioState();
 }
@@ -20,40 +24,23 @@ class _CrearUsuarioState extends State<CrearUsuario> {
   Future<void> _crearUsuario() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Verificar si la cédula ya existe
-        final cedula = _cedulaController.text.trim();
-        final querySnapshot =
-            await FirebaseFirestore.instance
-                .collection('usuarios')
-                .where('cedula', isEqualTo: cedula)
-                .get();
-
-        if (querySnapshot.docs.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Ya existe un usuario con esta cédula'),
-              backgroundColor: Colors.redAccent,
-            ),
-          );
-          return; // No continuar con la creación
-        }
-
         final docRef = FirebaseFirestore.instance.collection('usuarios').doc();
+
         await docRef.set({
           'uid': docRef.id,
           'nombre': _nombreController.text.trim(),
-          'cedula': cedula,
+          'cedula': _cedulaController.text.trim(),
           'telefono': _telefonoController.text.trim(),
           'email': _emailController.text.trim(),
           'contrasena': _contrasenaController.text.trim(),
           'rol': _rolSeleccionado,
+          'creadoPor': widget.adminId, // Guardar quién lo creó
         });
 
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Usuario creado exitosamente')));
 
-        // Limpiar campos
         _formKey.currentState!.reset();
         _nombreController.clear();
         _cedulaController.clear();

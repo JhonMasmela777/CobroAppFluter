@@ -57,70 +57,99 @@ class BaseDatosAdmin extends StatelessWidget {
               ? 'Correo: ${data['correoElectronico']}'
               : collectionName == 'creditos' && data['idCliente'] != null
               ? 'ID Cliente: ${data['idCliente']}'
+              : collectionName == 'creditos' && data['adminId'] != null
+              ? 'ID Admin: ${data['adminId']}'
               : 'Sin información adicional',
         ),
-        onTap: () {
-          if (collectionName == 'creditos' && data['idCliente'] != null) {
-            final idCliente = data['idCliente'].toString();
-            FirebaseFirestore.instance
-                .collection('clientes')
-                .where('cedula', isEqualTo: idCliente)
-                .limit(1)
-                .get()
-                .then((clienteSnapshot) {
-                  String nombreCliente = 'No encontrado';
-                  if (clienteSnapshot.docs.isNotEmpty) {
-                    final clienteData = clienteSnapshot.docs.first.data();
-                    nombreCliente =
-                        clienteData['nombreCompleto'] ??
-                        clienteData['nombre'] ??
-                        'Sin nombre';
-                  }
+        onTap: () async {
+          if (collectionName == 'creditos') {
+            String nombreCliente = 'No encontrado';
+            String nombreAdmin = 'No encontrado';
 
-                  showDialog(
-                    context: context,
-                    builder: (_) {
-                      return AlertDialog(
-                        title: const Text('Detalles del crédito'),
-                        content: SizedBox(
-                          width: double.maxFinite,
-                          child: ListView(
-                            shrinkWrap: true,
-                            children: [
-                              Text(
-                                'Nombre del Cliente: $nombreCliente',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              ...data.entries.map((entry) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 2.0,
-                                  ),
-                                  child: Text(
-                                    '${entry.key}: ${entry.value}',
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                );
-                              }).toList(),
-                            ],
+            // Obtener nombre cliente buscando por idCliente (document ID)
+            if (data['idCliente'] != null) {
+              final clienteDoc =
+                  await FirebaseFirestore.instance
+                      .collection('clientes')
+                      .doc(data['idCliente'])
+                      .get();
+
+              if (clienteDoc.exists) {
+                final clienteData = clienteDoc.data()!;
+                nombreCliente =
+                    clienteData['nombreCompleto'] ??
+                    clienteData['nombre'] ??
+                    'Sin nombre';
+              }
+            }
+
+            // Obtener nombre admin por adminId
+            if (data['adminId'] != null) {
+              final adminDoc =
+                  await FirebaseFirestore.instance
+                      .collection(
+                        'usuarios',
+                      ) // Cambia por el nombre correcto si es distinto
+                      .doc(data['adminId'])
+                      .get();
+
+              if (adminDoc.exists) {
+                final adminData = adminDoc.data()!;
+                nombreAdmin =
+                    adminData['nombreCompleto'] ??
+                    adminData['nombre'] ??
+                    'Sin nombre';
+              }
+            }
+
+            showDialog(
+              context: context,
+              builder: (_) {
+                return AlertDialog(
+                  title: const Text('Detalles del crédito'),
+                  content: SizedBox(
+                    width: double.maxFinite,
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        Text(
+                          'Nombre del Cliente: $nombreCliente',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cerrar'),
+                        Text(
+                          'Nombre del Admin: $nombreAdmin',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      );
-                    },
-                  );
-                });
+                        ),
+                        const SizedBox(height: 10),
+                        ...data.entries.map((entry) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2.0),
+                            child: Text(
+                              '${entry.key}: ${entry.value}',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                          );
+                        }).toList(),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cerrar'),
+                    ),
+                  ],
+                );
+              },
+            );
           } else {
-            // Para otros documentos (no créditos o sin idCliente)
+            // Para otros documentos (no créditos o sin idCliente/adminId)
             showDialog(
               context: context,
               builder: (_) {

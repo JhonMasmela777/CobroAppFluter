@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'globals.dart' as globals;
 
 class PerfilUsuario extends StatelessWidget {
-  const PerfilUsuario({super.key});
+  final String userId; // Recibe el userId
+
+  const PerfilUsuario({
+    super.key,
+    required this.userId,
+  }); // constructor recibe userId
 
   @override
   Widget build(BuildContext context) {
@@ -14,36 +18,33 @@ class PerfilUsuario extends StatelessWidget {
         centerTitle: true,
         title: const Text('Mi Perfil'),
       ),
-      body: FutureBuilder<QuerySnapshot>(
+      body: FutureBuilder<DocumentSnapshot>(
         future:
             FirebaseFirestore.instance
                 .collection('usuarios')
-                .where('cedula', isEqualTo: globals.cedulaLogueada)
+                .doc(userId) // usar userId recibido
                 .get(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          if (!snapshot.hasData || !snapshot.data!.exists) {
             return const Center(child: Text('Usuario no encontrado'));
           }
 
-          final usuario = snapshot.data!.docs.first;
+          final usuario = snapshot.data!;
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Ícono grande de usuario
                 const CircleAvatar(
                   radius: 50,
                   backgroundColor: Color(0xFF00C28B),
                   child: Icon(Icons.person, size: 60, color: Colors.white),
                 ),
                 const SizedBox(height: 20),
-
-                // Nombre grande y destacado
                 Text(
                   usuario['nombre'],
                   style: const TextStyle(
@@ -53,8 +54,6 @@ class PerfilUsuario extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 30),
-
-                // Campos con íconos y texto
                 InfoRow(
                   icon: Icons.badge,
                   label: 'Cédula',

@@ -14,10 +14,7 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  String cedulaUsuario = '';
 
   Future<void> login() async {
     try {
@@ -26,24 +23,31 @@ class _LoginViewState extends State<LoginView> {
               .collection('usuarios')
               .where('email', isEqualTo: emailController.text.trim())
               .where('contrasena', isEqualTo: passwordController.text.trim())
+              .limit(1) // ← Añadido para optimización
               .get();
 
       if (snapshot.docs.isNotEmpty) {
-        final userData = snapshot.docs.first.data() as Map<String, dynamic>;
+        final userDoc = snapshot.docs.first;
+        final userData = userDoc.data() as Map<String, dynamic>;
         final rol = userData['rol'];
-        cedulaLogueada = userData['cedula']; // Variable global, si usas
+
+        // Cambio clave: Usamos el ID del documento en lugar de la cédula
+        final userId = userDoc.id; // ← ID automático de Firestore
 
         if (rol == 'administrador') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => MenuAdmin()),
+            MaterialPageRoute(
+              builder:
+                  (context) =>
+                      MenuAdmin(userId: userId), // ← Aquí pasamos el ID
+            ),
           );
         } else if (rol == 'usuario') {
-          cedulaUsuario = userData['cedula']; // <-- Aquí asignas la cédula
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => MenuUsuario(clienteCedula: cedulaUsuario),
+              builder: (context) => MenuUsuario(userId: userId),
             ),
           );
         } else {

@@ -1,55 +1,104 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
-class Detallerpagousuario extends StatelessWidget {
-  final String cedula;
-
-  const Detallerpagousuario({Key? key, required this.cedula}) : super(key: key);
+class DetallePagoUsuario extends StatelessWidget {
+  final String clienteId;
+  final String userId;
+  const DetallePagoUsuario({
+    Key? key,
+    required this.clienteId,
+    required this.userId,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
-
     return Scaffold(
-      appBar: AppBar(title: Text('Historial de Pagos - $cedula')),
+      backgroundColor: const Color(0xFFDFFFEF),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF00C290),
+        title: const Text(
+          'Detalle de Abonos',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 2,
+      ),
       body: StreamBuilder<QuerySnapshot>(
         stream:
             FirebaseFirestore.instance
                 .collection('abonos')
-                .where('cedula', isEqualTo: cedula)
+                .where('clienteId', isEqualTo: clienteId)
                 .orderBy('fecha', descending: true)
                 .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error al cargar los pagos:\n${snapshot.error}'),
-            );
-          }
-
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final docs = snapshot.data?.docs ?? [];
-
-          if (docs.isEmpty) {
-            return const Center(child: Text('No hay pagos registrados'));
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text(
+                'Error al cargar los abonos',
+                style: TextStyle(fontSize: 16, color: Colors.black54),
+              ),
+            );
           }
 
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(
+              child: Text(
+                'No hay abonos registrados.',
+                style: TextStyle(fontSize: 16, color: Colors.black54),
+              ),
+            );
+          }
+
+          final abonos = snapshot.data!.docs;
+
           return ListView.builder(
-            itemCount: docs.length,
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+            itemCount: abonos.length,
             itemBuilder: (context, index) {
-              final data = docs[index].data() as Map<String, dynamic>;
+              final abono = abonos[index];
+              final valor = abono['valor'];
+              final fecha = (abono['fecha'] as Timestamp).toDate();
 
-              final double valor = (data['valor'] as num).toDouble();
-              final Timestamp fechaTs = data['fecha'] as Timestamp;
-              final DateTime fecha = fechaTs.toDate();
-
-              return ListTile(
-                leading: const Icon(Icons.payment, color: Colors.green),
-                title: Text('Pago: \$${valor.toStringAsFixed(2)}'),
-                subtitle: Text('Fecha: ${dateFormat.format(fecha)}'),
+              return Container(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 6,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  leading: const Icon(Icons.attach_money, color: Colors.green),
+                  title: Text(
+                    'Abono: \$${valor.toString()}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Fecha: ${fecha.day}/${fecha.month}/${fecha.year} '
+                    '${fecha.hour}:${fecha.minute.toString().padLeft(2, '0')}',
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                ),
               );
             },
           );

@@ -5,8 +5,14 @@ import 'package:hola_mundo/crearUsuario.dart';
 import 'package:hola_mundo/gestionarCreditoAdmin.dart';
 
 class MenuAdmin extends StatelessWidget {
-  const MenuAdmin({super.key});
+  final String userId; // ← Nuevo parámetro para el ID automático
 
+  const MenuAdmin({
+    super.key,
+    required this.userId,
+  }); // ← Hacemos el parámetro requerido
+
+  // Función para construir botones reutilizables
   Widget buildBoton(BuildContext context, IconData icono, String texto) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -27,26 +33,37 @@ class MenuAdmin extends StatelessWidget {
           if (texto == 'Crear Usuario') {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CrearUsuario()),
+              MaterialPageRoute(
+                builder:
+                    (context) =>
+                        CrearUsuario(adminId: userId), // ← Pasamos el ID
+              ),
             );
           } else if (texto == 'Crear Cliente') {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CrearClienteAdmin()),
+              MaterialPageRoute(
+                builder:
+                    (context) =>
+                        CrearClienteAdmin(adminId: userId), // ← Pasamos el ID
+              ),
             );
           } else if (texto == 'Base De Datos') {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => BaseDatosAdmin()),
+              MaterialPageRoute(
+                builder: (context) => BaseDatosAdmin(), // ← Pasamos el ID
+              ),
             );
           } else if (texto == 'Gestión De Créditos') {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => GestionCreditosAdmin()),
+              MaterialPageRoute(
+                builder: (context) => GestionCreditosAdmin(), // ← Pasamos el ID
+              ),
             );
           }
-
-          // Puedes agregar más condiciones si luego quieres navegar a otras pantallas
+          // Agregar más rutas según necesidad
         },
       ),
     );
@@ -55,21 +72,30 @@ class MenuAdmin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFDFFFEF), // Verde muy claro
+      backgroundColor: Color(0xFFDFFFEF),
       body: Column(
         children: [
           Container(
             width: double.infinity,
             padding: EdgeInsets.only(top: 60, bottom: 20),
-            color: Color(0xFF00C290), // Verde oscuro
+            color: Color(0xFF00C290),
             child: Center(
-              child: Text(
-                'Hola, Bienvenido De Nuevo.',
-                style: TextStyle(
-                  color: Colors.black87,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Column(
+                children: [
+                  Text(
+                    'Hola, Bienvenido De Nuevo.',
+                    style: TextStyle(
+                      color: Colors.black87,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'ID: $userId', // ← Mostramos el ID (opcional, solo para debug)
+                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                  ),
+                ],
               ),
             ),
           ),

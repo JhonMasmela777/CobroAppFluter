@@ -3,6 +3,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hola_mundo/CrearCreditoAdmin.dart';
 
 class CrearClienteAdmin extends StatefulWidget {
+  final String adminId;
+
+  const CrearClienteAdmin({Key? key, required this.adminId}) : super(key: key);
+
   @override
   _CrearClienteAdminState createState() => _CrearClienteAdminState();
 }
@@ -27,18 +31,8 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
       try {
         final cedula = _cedulaController.text.trim();
 
-        final existe =
-            await FirebaseFirestore.instance
-                .collection('clientes')
-                .where('cedula', isEqualTo: cedula)
-                .get();
-
-        if (existe.docs.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ya existe un cliente con esta cédula')),
-          );
-          return;
-        }
+        // Ya no se busca si existe por cedula
+        // El id se genera automáticamente con doc()
 
         final docRef = FirebaseFirestore.instance.collection('clientes').doc();
         await docRef.set({
@@ -65,11 +59,11 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
         _numeroCelularController.clear();
         _referenciaController.clear();
 
-        // 👉 Navegar a CrearCreditoAdmin pasando la cédula
+        // Ahora pasamos docRef.id (uid) en vez de cedula
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CrearCreditoAdmin(cedula: cedula),
+            builder: (context) => CrearCreditoAdmin(clienteId: docRef.id),
           ),
         );
       } catch (e) {

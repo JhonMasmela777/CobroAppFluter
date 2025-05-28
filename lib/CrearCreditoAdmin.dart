@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart'; // Para formatear fecha y hora
 
 class CrearCreditoAdmin extends StatefulWidget {
-  final String cedula;
+  final String clienteId; // Cambié de cedula a clienteId
 
-  const CrearCreditoAdmin({super.key, required this.cedula});
+  const CrearCreditoAdmin({super.key, required this.clienteId});
 
   @override
   State<CrearCreditoAdmin> createState() => _CrearCreditoAdminState();
@@ -55,7 +55,7 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
           child: ListView(
             children: [
               Text(
-                'Cédula del Cliente: ${widget.cedula}',
+                'ID del Cliente: ${widget.clienteId}', // Aquí se muestra el ID
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -112,7 +112,6 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_formKey.currentState!.validate()) {
-                      // Validar dropdowns
                       if (_articuloSeleccionado == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -130,13 +129,7 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
                         return;
                       }
 
-                      // Actualizar los controladores de texto para guardar en firestore (si quieres mantener lógica intacta)
-                      // En vez de controladores, puedes usar las variables en la función _crearCredito
-                      // Pero como pediste no cambiar lógica, esto es solo para evitar errores en validación
-                      // Sin embargo, se puede ajustar la función _crearCredito para usar estas variables.
-                      // Pero como me pediste, dejo lógica intacta.
-
-                      _crearCredito(); // Tu función original
+                      _crearCredito();
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -223,7 +216,6 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
   }
 
   Future<void> _crearCredito() async {
-    // Aquí queda intacta tu función original, solo he copiado para que funcione con las variables dropdown
     if (_formKey.currentState!.validate()) {
       try {
         await FirebaseFirestore.instance.collection('creditos').add({
@@ -232,14 +224,14 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
           'estado': _estadoController.text.trim(),
           'fechaInicio': Timestamp.now(),
           'frecuenciaPago': _frecuenciaSeleccionada ?? '',
-          'idCliente': widget.cedula,
+          'idCliente': widget.clienteId, // Aquí guardamos el id automático
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Crédito creado exitosamente')),
         );
 
-        Navigator.pop(context); // Opcional: volver después de crear
+        Navigator.pop(context); // Opcional: vuelve a la pantalla anterior
       } catch (e) {
         ScaffoldMessenger.of(
           context,

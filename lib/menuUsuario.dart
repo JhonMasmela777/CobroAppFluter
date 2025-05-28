@@ -7,9 +7,9 @@ import 'package:hola_mundo/perfilUsuario.dart';
 import 'package:hola_mundo/globals.dart';
 
 class MenuUsuario extends StatefulWidget {
-  final String clienteCedula;
+  final String userId; // Cambiamos de clienteCedula a userId
 
-  const MenuUsuario({Key? key, required this.clienteCedula}) : super(key: key);
+  const MenuUsuario({Key? key, required this.userId}) : super(key: key);
 
   @override
   _MenuUsuarioState createState() => _MenuUsuarioState();
@@ -25,17 +25,20 @@ class _MenuUsuarioState extends State<MenuUsuario> {
   }
 
   Future<void> _cargarDatosCliente() async {
-    final snapshot =
-        await FirebaseFirestore.instance
-            .collection('clientes')
-            .where('cedula', isEqualTo: widget.clienteCedula)
-            .limit(1)
-            .get();
+    try {
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('clientes')
+              .doc(widget.userId) // Ahora usamos el ID directo
+              .get();
 
-    if (snapshot.docs.isNotEmpty) {
-      setState(() {
-        clienteData = snapshot.docs.first.data();
-      });
+      if (doc.exists) {
+        setState(() {
+          clienteData = doc.data();
+        });
+      }
+    } catch (e) {
+      print('Error cargando datos: $e');
     }
   }
 
@@ -59,19 +62,22 @@ class _MenuUsuarioState extends State<MenuUsuario> {
           if (texto == 'Crear Cliente') {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => CrearClienteAdmin()),
+              MaterialPageRoute(
+                builder: (context) => CrearClienteAdmin(adminId: widget.userId),
+              ),
             );
           } else if (texto == 'Mi Perfil') {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => PerfilUsuario()),
+              MaterialPageRoute(
+                builder: (context) => PerfilUsuario(userId: widget.userId),
+              ),
             );
           } else if (texto == 'Cobros Del Día') {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    (context) => CobrosUsuario(cedulaCobrador: cedulaLogueada),
+                builder: (context) => CobrosUsuario(userId: widget.userId),
               ),
             );
           } else if (texto == 'Historial De Pagos') {
@@ -79,9 +85,7 @@ class _MenuUsuarioState extends State<MenuUsuario> {
               context,
               MaterialPageRoute(
                 builder:
-                    (context) => HistorialPagosUsuario(
-                      cedulaUsuario: widget.clienteCedula,
-                    ),
+                    (context) => HistorialPagosUsuario(userId: widget.userId),
               ),
             );
           } else if (texto == 'Notificaciones') {

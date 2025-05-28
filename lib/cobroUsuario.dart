@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:hola_mundo/PagoUsuario.dart';
 
 class CobrosUsuario extends StatelessWidget {
-  final String cedulaCobrador;
+  final String userId; // Este debe ser la cédula del cobrador
 
-  CobrosUsuario({required this.cedulaCobrador});
+  CobrosUsuario({required this.userId});
 
   final CollectionReference creditosRef = FirebaseFirestore.instance.collection(
     'creditos',
@@ -18,7 +18,7 @@ class CobrosUsuario extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF00C290),
         title: Text(
-          'Cobros de $cedulaCobrador',
+          'Cobros de $userId',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -30,7 +30,7 @@ class CobrosUsuario extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream:
             creditosRef
-                .where('cedulaCobradorAsignado', isEqualTo: cedulaCobrador)
+                .where('cedulaCobradorAsignado', isEqualTo: userId)
                 .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
@@ -109,7 +109,9 @@ class CobrosUsuario extends StatelessWidget {
                               (context) => PagoUsuario(
                                 creditoId: creditoId,
                                 deudaActual: deuda,
-                                clienteCedula: idCliente,
+                                clienteId: idCliente,
+
+                                userId: userId, // corregido aquí también
                               ),
                         ),
                       );
