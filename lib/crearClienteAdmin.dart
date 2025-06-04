@@ -46,9 +46,18 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
           'referencia': _referenciaController.text.trim(),
         });
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Cliente creado exitosamente')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10),
+                Text('Usuario creado exitosamente'),
+              ],
+            ),
+          ),
+        );
 
         _formKey.currentState!.reset();
         _cedulaController.clear();
@@ -67,9 +76,18 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
           ),
         );
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al crear cliente: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 10),
+                Expanded(child: Text('Error al crear usuario: $e')),
+              ],
+            ),
+          ),
+        );
       }
     }
   }
@@ -79,7 +97,7 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
     return Scaffold(
       backgroundColor: Color(0xFFEFE9F4),
       appBar: AppBar(
-        backgroundColor: Color(0xFF00B894),
+        backgroundColor: Color(0xFF00C290),
         title: Text('Crear Cliente'),
         centerTitle: true,
         leading: BackButton(color: Colors.white),
@@ -91,8 +109,17 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
           child: ListView(
             children: [
               _campoTexto('Nombre Completo', _nombreCompletoController),
-              _campoTexto('Cédula', _cedulaController),
-              _campoTexto('Número Celular', _numeroCelularController),
+              _campoTexto(
+                'Cédula',
+                _cedulaController,
+                tipo: TextInputType.number,
+              ),
+              _campoTexto(
+                'Teléfono',
+                _numeroCelularController,
+                tipo: TextInputType.number,
+              ),
+
               _campoTexto(
                 'Correo Electrónico',
                 _correoController,
@@ -109,7 +136,7 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
                 child: ElevatedButton(
                   onPressed: _crearCliente,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF00B894),
+                    backgroundColor: Color(0xFF00C290),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),

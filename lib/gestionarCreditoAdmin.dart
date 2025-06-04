@@ -44,9 +44,18 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
       setState(() {
         cargandoCobradores = false;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error cargando cobradores: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(child: Text('Error cargando cobradores: $e')),
+            ],
+          ),
+        ),
+      );
     }
   }
 
@@ -54,9 +63,18 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
     try {
       await creditosRef.doc(docId).update({'estado': nuevoEstado});
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al actualizar estado: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(child: Text('Error al actualizar estado: $e')),
+            ],
+          ),
+        ),
+      );
     }
   }
 
@@ -66,13 +84,31 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
         'cedulaCobradorAsignado': idCobrador,
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cobrador asignado correctamente')),
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Cobrador Asignado Correctamente'),
+            ],
+          ),
+        ),
       );
       setState(() {});
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al asignar cobrador: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(child: Text('Error al asignar cobrador: $e')),
+            ],
+          ),
+        ),
+      );
     }
   }
 
@@ -106,7 +142,8 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
         ),
         centerTitle: true,
         elevation: 0,
-        automaticallyImplyLeading: false, // Sin botón de volver atrás
+        automaticallyImplyLeading: true, // Activamos el botón de atrás
+        leading: BackButton(color: Colors.white), // Flecha blanca
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: creditosRef.snapshots(),
@@ -177,7 +214,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                       Text('Estado actual: $estado'),
                       Text('Asignado a: $asignadoA'),
                       SizedBox(height: 16),
-                      if (estado == 'pendiente') ...[
+                      if (estado == 'Pendiente') ...[
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [

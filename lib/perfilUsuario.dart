@@ -14,10 +14,13 @@ class PerfilUsuario extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFE0FFF1),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF00C28B),
-        centerTitle: true,
+        backgroundColor: const Color(0xFF00C290),
+        leading: const BackButton(color: Colors.white),
         title: const Text('Mi Perfil'),
+        centerTitle: true,
+        elevation: 2,
       ),
+
       body: FutureBuilder<DocumentSnapshot>(
         future:
             FirebaseFirestore.instance

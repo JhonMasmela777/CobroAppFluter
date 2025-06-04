@@ -37,9 +37,18 @@ class _CrearUsuarioState extends State<CrearUsuario> {
           'creadoPor': widget.adminId, // Guardar quién lo creó
         });
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Usuario creado exitosamente')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.green,
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10),
+                Text('Usuario creado exitosamente'),
+              ],
+            ),
+          ),
+        );
 
         _formKey.currentState!.reset();
         _nombreController.clear();
@@ -52,9 +61,19 @@ class _CrearUsuarioState extends State<CrearUsuario> {
           _rolSeleccionado = 'usuario';
         });
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al crear usuario: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 10),
+                Expanded(child: Text('Error al crear Usuario: $e')),
+              ],
+            ),
+          ),
+        );
+        ;
       }
     }
   }
@@ -64,7 +83,7 @@ class _CrearUsuarioState extends State<CrearUsuario> {
     return Scaffold(
       backgroundColor: Color(0xFFEFE9F4),
       appBar: AppBar(
-        backgroundColor: Color(0xFF00B894),
+        backgroundColor: Color(0xFF00C290),
         title: Text('Crear Usuario'),
         centerTitle: true,
         leading: BackButton(color: Colors.white),
@@ -76,8 +95,17 @@ class _CrearUsuarioState extends State<CrearUsuario> {
           child: ListView(
             children: [
               _campoTexto('Nombre Completo', _nombreController),
-              _campoTexto('Cédula', _cedulaController),
-              _campoTexto('Teléfono', _telefonoController),
+              _campoTexto(
+                'Cédula',
+                _cedulaController,
+                tipo: TextInputType.number,
+              ),
+              _campoTexto(
+                'Teléfono',
+                _telefonoController,
+                tipo: TextInputType.number,
+              ),
+
               _campoTexto(
                 'Email',
                 _emailController,
@@ -121,7 +149,7 @@ class _CrearUsuarioState extends State<CrearUsuario> {
               ElevatedButton(
                 onPressed: _crearUsuario,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF00B894),
+                  backgroundColor: Color(0xFF00C290),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),

@@ -42,6 +42,23 @@ class _PagoUsuarioState extends State<PagoUsuario> {
           .doc(widget.creditoId)
           .update({'deuda': nuevoSaldo});
 
+      // Limpiar el campo de texto después de guardar el abono
+      _valorController.clear();
+
+      // Mostrar SnackBar con icono de éxito
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green[600],
+          content: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Abono guardado correctamente'),
+            ],
+          ),
+        ),
+      );
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -53,9 +70,20 @@ class _PagoUsuarioState extends State<PagoUsuario> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Error al registrar abono')));
+      // Mostrar SnackBar con icono de error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red[700],
+          content: Row(
+            children: const [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 12),
+              Text('No se pudo efectuar el abono'),
+            ],
+          ),
+        ),
+      );
+
       print('Error al guardar abono: $e');
     }
   }
@@ -65,18 +93,13 @@ class _PagoUsuarioState extends State<PagoUsuario> {
     return Scaffold(
       backgroundColor: const Color(0xFFDFFFEF), // Fondo igual a CobrosUsuario
       appBar: AppBar(
-        backgroundColor: const Color(0xFF00C290), // Igual appbar verde
-        title: const Text(
-          'Registrar Abono',
-          style: TextStyle(
-            color: Colors.black, // Texto negro para contraste
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
+        backgroundColor: const Color(0xFF00C290),
+        leading: const BackButton(color: Colors.white),
+        title: const Text('Registrar Abono'),
         centerTitle: true,
         elevation: 2,
       ),
+
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Form(

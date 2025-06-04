@@ -16,17 +16,12 @@ class DetallePagoUsuario extends StatelessWidget {
       backgroundColor: const Color(0xFFDFFFEF),
       appBar: AppBar(
         backgroundColor: const Color(0xFF00C290),
-        title: const Text(
-          'Detalle de Abonos',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
+        leading: const BackButton(color: Colors.white),
+        title: const Text('Detalles De Los Abonos'),
         centerTitle: true,
         elevation: 2,
       ),
+
       body: StreamBuilder<QuerySnapshot>(
         stream:
             FirebaseFirestore.instance
@@ -64,8 +59,9 @@ class DetallePagoUsuario extends StatelessWidget {
             itemCount: abonos.length,
             itemBuilder: (context, index) {
               final abono = abonos[index];
-              final valor = abono['valor'];
-              final fecha = (abono['fecha'] as Timestamp).toDate();
+              final abonoData = abono.data() as Map<String, dynamic>;
+              final valor = abonoData['valor'];
+              final fecha = (abonoData['fecha'] as Timestamp).toDate();
 
               return Container(
                 margin: const EdgeInsets.symmetric(vertical: 8),
@@ -98,6 +94,35 @@ class DetallePagoUsuario extends StatelessWidget {
                     '${fecha.hour}:${fecha.minute.toString().padLeft(2, '0')}',
                     style: const TextStyle(fontSize: 14, color: Colors.black87),
                   ),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text('Detalles del Abono'),
+                          content: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Valor: \$${valor.toString()}'),
+                              Text(
+                                'Fecha: ${fecha.day}/${fecha.month}/${fecha.year} '
+                                '${fecha.hour}:${fecha.minute.toString().padLeft(2, '0')}',
+                              ),
+                              if (abonoData.containsKey('userId'))
+                                Text('Registrado por: ${abonoData['userId']}'),
+                            ],
+                          ),
+                          actions: [
+                            TextButton(
+                              child: const Text('Cerrar'),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                 ),
               );
             },

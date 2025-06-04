@@ -19,13 +19,11 @@ class CobrosUsuario extends StatelessWidget {
         backgroundColor: const Color(0xFF00C290),
         title: Text(
           'Cobros de $userId',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: Colors.black,
-          ),
-        ),
+        ), // Aquí el cambio para estilo igual que CrearClienteAdmin
         centerTitle: true,
+        leading: const BackButton(
+          color: Colors.white,
+        ), // Botón atrás blanco igual
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream:
@@ -110,7 +108,6 @@ class CobrosUsuario extends StatelessWidget {
                                 creditoId: creditoId,
                                 deudaActual: deuda,
                                 clienteId: idCliente,
-
                                 userId: userId, // corregido aquí también
                               ),
                         ),

@@ -16,7 +16,8 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
 
   // Controllers para campos que siguen siendo texto
   final TextEditingController _deudaController = TextEditingController();
-  final TextEditingController _estadoController = TextEditingController();
+  String? _estadoSeleccionado;
+  final List<String> _estados = ['Pendiente', 'Pagado', 'Cancelado'];
 
   // Variables para dropdowns
   String? _articuloSeleccionado;
@@ -24,11 +25,11 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
 
   // Opciones para dropdown
   final List<String> _articulos = [
-    'zapatero',
-    'sabana',
-    'silla mecedora',
-    'espejo',
-    'cuadro',
+    'Zapatero',
+    'Sabana',
+    'Silla mecedora',
+    'Espejo',
+    'Cuadro',
   ];
 
   final List<String> _frecuencias = ['Quincenal', 'Mensual', 'Semanal'];
@@ -43,7 +44,7 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
     return Scaffold(
       backgroundColor: const Color(0xFFEFE9F4),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF00B894),
+        backgroundColor: Color(0xFF00C290),
         title: const Text('Crear Crédito'),
         centerTitle: true,
         leading: BackButton(color: Colors.white),
@@ -92,7 +93,13 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
               ),
 
               // Campo Estado
-              _campoTexto('Estado', _estadoController),
+              _campoDropdown('Estado', _estados, _estadoSeleccionado, (
+                String? nuevoValor,
+              ) {
+                setState(() {
+                  _estadoSeleccionado = nuevoValor;
+                });
+              }),
 
               // Dropdown para Frecuencia de Pago
               _campoDropdown(
@@ -133,7 +140,7 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00B894),
+                    backgroundColor: Color(0xFF00C290),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25),
                     ),
@@ -221,21 +228,40 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
         await FirebaseFirestore.instance.collection('creditos').add({
           'articulo': _articuloSeleccionado ?? '',
           'deuda': double.tryParse(_deudaController.text.trim()) ?? 0.0,
-          'estado': _estadoController.text.trim(),
+          'estado': _estadoSeleccionado ?? 'Pendiente',
           'fechaInicio': Timestamp.now(),
           'frecuenciaPago': _frecuenciaSeleccionada ?? '',
           'idCliente': widget.clienteId, // Aquí guardamos el id automático
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Crédito creado exitosamente')),
+          SnackBar(
+            backgroundColor: Color(0xFF00C290),
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10),
+                Text('Credito creado exitosamente'),
+              ],
+            ),
+          ),
         );
 
         Navigator.pop(context); // Opcional: vuelve a la pantalla anterior
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al crear crédito: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 10),
+                Expanded(child: Text('Error al crear Credito: $e')),
+              ],
+            ),
+          ),
+        );
+        ;
       }
     }
   }

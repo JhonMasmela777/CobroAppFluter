@@ -7,21 +7,49 @@ class HistorialPagosUsuario extends StatelessWidget {
   const HistorialPagosUsuario({Key? key, required this.userId})
     : super(key: key);
 
+  void _mostrarDetallesPago(BuildContext context, Map<String, dynamic> data) {
+    final valor = (data['valor'] ?? 0).toDouble();
+    final fecha = (data['fecha'] as Timestamp).toDate();
+    final clienteId = data['clienteId'] ?? 'Desconocido';
+
+    showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: const Text('Detalles del Pago'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Valor: \$${valor.toStringAsFixed(2)}'),
+                const SizedBox(height: 8),
+                Text('Cliente ID: $clienteId'),
+                const SizedBox(height: 8),
+                Text(
+                  'Fecha: ${fecha.day}/${fecha.month}/${fecha.year} ${fecha.hour}:${fecha.minute.toString().padLeft(2, '0')}',
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cerrar'),
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFDFFFEF),
       appBar: AppBar(
         backgroundColor: const Color(0xFF00C290),
-        title: const Text(
-          'Historial de Pagos',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: Colors.black,
-          ),
-        ),
+        leading: const BackButton(color: Colors.white),
+        title: const Text('Historial De Pagos'),
         centerTitle: true,
+        elevation: 2,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream:
@@ -90,6 +118,7 @@ class HistorialPagosUsuario extends StatelessWidget {
                     'Fecha: ${fecha.day}/${fecha.month}/${fecha.year} ${fecha.hour}:${fecha.minute.toString().padLeft(2, '0')}',
                     style: const TextStyle(fontSize: 14, color: Colors.black87),
                   ),
+                  onTap: () => _mostrarDetallesPago(context, data),
                 ),
               );
             },

@@ -3,6 +3,8 @@ import 'package:hola_mundo/baseDatosAdmin.dart';
 import 'package:hola_mundo/crearClienteAdmin.dart';
 import 'package:hola_mundo/crearUsuario.dart';
 import 'package:hola_mundo/gestionarCreditoAdmin.dart';
+import 'package:hola_mundo/historialPagoUsuario.dart';
+import 'package:hola_mundo/historialPagosAdmin.dart';
 
 class MenuAdmin extends StatelessWidget {
   final String userId; // ← Nuevo parámetro para el ID automático
@@ -60,6 +62,13 @@ class MenuAdmin extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (context) => GestionCreditosAdmin(), // ← Pasamos el ID
+              ),
+            );
+          } else if (texto == 'Historial De Pagos') {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HistorialPagosAdmin(), // ← Pasamos el ID
               ),
             );
           }
