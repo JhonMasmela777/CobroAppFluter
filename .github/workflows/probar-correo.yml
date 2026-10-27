@@ -1,0 +1,26 @@
+﻿name: Probar correo Cobramzas
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probar-correo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Enviar correo de prueba
+        run: node recordatorios/probar-correo.js
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
