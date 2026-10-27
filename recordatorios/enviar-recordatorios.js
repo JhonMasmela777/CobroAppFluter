@@ -23,7 +23,7 @@ async function consultarCuotasPendientes() {
   hoy.setHours(0, 0, 0, 0);
 
   const limite = new Date(hoy);
-  limite.setDate(limite.getDate() + 3);
+  limite.setDate(limite.getDate() + 12);
   limite.setHours(23, 59, 59, 999);
 
   const cuotasSnapshot = await db
@@ -59,4 +59,5 @@ consultarCuotasPendientes()
     console.error('Error consultando las cuotas:', error);
     process.exit(1);
   });
+
 
