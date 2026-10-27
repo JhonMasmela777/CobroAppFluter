@@ -1,15 +1,10 @@
 ﻿const { initializeApp, cert } = require('firebase-admin/app');
-const {
-  getFirestore,
-  Timestamp,
-} = require('firebase-admin/firestore');
+const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
 
 if (!serviceAccountJson) {
-  throw new Error(
-    'Falta configurar el secreto FIREBASE_SERVICE_ACCOUNT.'
-  );
+  throw new Error('Falta configurar FIREBASE_SERVICE_ACCOUNT.');
 }
 
 const serviceAccount = JSON.parse(serviceAccountJson);
@@ -20,70 +15,36 @@ initializeApp({
 
 const db = getFirestore();
 
-async function consultarCuotasPendientes() {
-  const ahora = new Date();
+async function diagnosticarCuotas() {
+  console.log('Proyecto Firebase:', serviceAccount.project_id);
+  console.log('Consultando la colección completa: cuotas');
 
-  const partesFecha = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Bogota',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(ahora);
+  const snapshot = await db.collection('cuotas').get();
 
-  const partes = Object.fromEntries(
-    partesFecha.map(({ type, value }) => [type, value])
-  );
+  console.log('Total de documentos en cuotas:', snapshot.size);
 
-  // Inicio de hoy en Colombia: 05:00 UTC.
-  const hoy = new Date(Date.UTC(
-    Number(partes.year),
-    Number(partes.month) - 1,
-    Number(partes.day),
-    5, 0, 0, 0
-  ));
-
-  // Final del día 20 desde hoy, hora de Colombia.
-  const limite = new Date(hoy);
-  limite.setUTCDate(limite.getUTCDate() + 20);
-  limite.setUTCHours(4, 59, 59, 999);
-
-  console.log('Fecha actual UTC:', ahora.toISOString());
-  console.log('Inicio del rango:', hoy.toISOString());
-  console.log('Fin del rango:', limite.toISOString());
-
-  const cuotasSnapshot = await db
-    .collection('cuotas')
-    .where('estado', '==', 'Pendiente')
-    .where('fechaVencimiento', '>=', Timestamp.fromDate(hoy))
-    .where('fechaVencimiento', '<=', Timestamp.fromDate(limite))
-    .get();
-
-  console.log(
-    `Cuotas pendientes encontradas: ${cuotasSnapshot.size}`
-  );
-
-  for (const doc of cuotasSnapshot.docs) {
+  for (const doc of snapshot.docs) {
     const cuota = doc.data();
+    const fecha = cuota.fechaVencimiento;
 
     console.log({
-      idCuota: doc.id,
-      idCliente: cuota.idCliente,
-      idCredito: cuota.idCredito,
-      numeroCuota: cuota.numeroCuota,
-      valorCuota: cuota.valorCuota,
+      documento: doc.id,
+      estado: cuota.estado,
+      tipoFecha: fecha instanceof Timestamp ? 'Timestamp' : typeof fecha,
       fechaVencimiento:
-        cuota.fechaVencimiento?.toDate().toISOString(),
-      recordatorioEnviado: cuota.recordatorioEnviado,
+        fecha && typeof fecha.toDate === 'function'
+          ? fecha.toDate().toISOString()
+          : String(fecha),
     });
   }
 }
 
-consultarCuotasPendientes()
+diagnosticarCuotas()
   .then(() => {
-    console.log('Consulta finalizada correctamente.');
+    console.log('Diagnóstico terminado.');
     process.exit(0);
   })
   .catch((error) => {
-    console.error('Error consultando las cuotas:', error);
+    console.error('Error en el diagnóstico:', error);
     process.exit(1);
   });
