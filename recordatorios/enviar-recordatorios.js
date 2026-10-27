@@ -1,5 +1,6 @@
 
-const admin = require('firebase-admin');
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
 
@@ -11,11 +12,11 @@ if (!serviceAccountJson) {
 
 const serviceAccount = JSON.parse(serviceAccountJson);
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+initializeApp({
+  credential: cert(serviceAccount),
 });
 
-const db = admin.firestore();
+const db = getFirestore();
 
 async function consultarCuotasPendientes() {
   const hoy = new Date();
@@ -28,8 +29,8 @@ async function consultarCuotasPendientes() {
   const cuotasSnapshot = await db
     .collection('cuotas')
     .where('estado', '==', 'Pendiente')
-    .where('fechaVencimiento', '>=', admin.firestore.Timestamp.fromDate(hoy))
-    .where('fechaVencimiento', '<=', admin.firestore.Timestamp.fromDate(limite))
+    .where('fechaVencimiento', '>=', Timestamp.fromDate(hoy))
+    .where('fechaVencimiento', '<=', Timestamp.fromDate(limite))
     .get();
 
   console.log(`Cuotas pendientes encontradas: ${cuotasSnapshot.size}`);
@@ -58,3 +59,4 @@ consultarCuotasPendientes()
     console.error('Error consultando las cuotas:', error);
     process.exit(1);
   });
+
