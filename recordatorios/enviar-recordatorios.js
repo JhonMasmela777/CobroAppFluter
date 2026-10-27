@@ -1,6 +1,8 @@
-
-const { initializeApp, cert } = require('firebase-admin/app');
-const { getFirestore, Timestamp } = require('firebase-admin/firestore');
+﻿const { initializeApp, cert } = require('firebase-admin/app');
+const {
+  getFirestore,
+  Timestamp,
+} = require('firebase-admin/firestore');
 
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
 
@@ -19,12 +21,35 @@ initializeApp({
 const db = getFirestore();
 
 async function consultarCuotasPendientes() {
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
+  const ahora = new Date();
 
+  const partesFecha = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(ahora);
+
+  const partes = Object.fromEntries(
+    partesFecha.map(({ type, value }) => [type, value])
+  );
+
+  // Inicio de hoy en Colombia: 05:00 UTC.
+  const hoy = new Date(Date.UTC(
+    Number(partes.year),
+    Number(partes.month) - 1,
+    Number(partes.day),
+    5, 0, 0, 0
+  ));
+
+  // Final del día 20 desde hoy, hora de Colombia.
   const limite = new Date(hoy);
-  limite.setDate(limite.getDate() + 20);
-  limite.setHours(23, 59, 59, 999);
+  limite.setUTCDate(limite.getUTCDate() + 20);
+  limite.setUTCHours(4, 59, 59, 999);
+
+  console.log('Fecha actual UTC:', ahora.toISOString());
+  console.log('Inicio del rango:', hoy.toISOString());
+  console.log('Fin del rango:', limite.toISOString());
 
   const cuotasSnapshot = await db
     .collection('cuotas')
@@ -33,7 +58,9 @@ async function consultarCuotasPendientes() {
     .where('fechaVencimiento', '<=', Timestamp.fromDate(limite))
     .get();
 
-  console.log(`Cuotas pendientes encontradas: ${cuotasSnapshot.size}`);
+  console.log(
+    `Cuotas pendientes encontradas: ${cuotasSnapshot.size}`
+  );
 
   for (const doc of cuotasSnapshot.docs) {
     const cuota = doc.data();
@@ -46,6 +73,7 @@ async function consultarCuotasPendientes() {
       valorCuota: cuota.valorCuota,
       fechaVencimiento:
         cuota.fechaVencimiento?.toDate().toISOString(),
+      recordatorioEnviado: cuota.recordatorioEnviado,
     });
   }
 }
@@ -59,7 +87,3 @@ consultarCuotasPendientes()
     console.error('Error consultando las cuotas:', error);
     process.exit(1);
   });
-
-
-
-
