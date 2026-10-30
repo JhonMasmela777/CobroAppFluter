@@ -1,0 +1,32 @@
+
+name: Probar recordatorios Cobra Tech
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 13 * * *"
+
+jobs:
+  consultar-cuotas:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Consultar cuotas pendientes
+        run: node recordatorios/enviar-recordatorios.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          TEST_EMAIL: jonathancoloradomasmela@gmail.com
+          SEND_TEST_EMAIL: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
