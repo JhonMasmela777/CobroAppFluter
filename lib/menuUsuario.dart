@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
+
 import 'package:cobro_app_flutter/cobroUsuario.dart';
 import 'package:cobro_app_flutter/crearClienteAdmin.dart';
 import 'package:cobro_app_flutter/historialPagoUsuario.dart';
@@ -8,16 +8,6 @@ import 'package:cobro_app_flutter/perfilUsuario.dart';
 
 class MenuUsuario extends StatefulWidget {
   final String userId;
-=======
-import 'package:hola_mundo/cobroUsuario.dart';
-import 'package:hola_mundo/crearClienteAdmin.dart';
-import 'package:hola_mundo/historialPagoUsuario.dart';
-import 'package:hola_mundo/perfilUsuario.dart';
-import 'package:hola_mundo/globals.dart';
-
-class MenuUsuario extends StatefulWidget {
-  final String userId; // Cambiamos de clienteCedula a userId
->>>>>>> origin/main
 
   const MenuUsuario({Key? key, required this.userId}) : super(key: key);
 
@@ -26,27 +16,22 @@ class MenuUsuario extends StatefulWidget {
 }
 
 class _MenuUsuarioState extends State<MenuUsuario> {
-<<<<<<< HEAD
   Map<String, dynamic>? usuarioData;
-=======
-  Map<String, dynamic>? clienteData;
->>>>>>> origin/main
 
   @override
   void initState() {
     super.initState();
-<<<<<<< HEAD
     _cargarDatosUsuario();
   }
 
-  // Cargar el perfil del usuario mediante su UID de Firebase Authentication.
+  // Cargar perfil mediante el UID de Firebase Authentication.
   Future<void> _cargarDatosUsuario() async {
     try {
       final usuariosRef = FirebaseFirestore.instance.collection('usuarios');
 
       Map<String, dynamic>? datos;
 
-      // Primera búsqueda: campo uid.
+      // Primera búsqueda: UID.
       final resultadoUid =
           await usuariosRef
               .where('uid', isEqualTo: widget.userId)
@@ -57,7 +42,7 @@ class _MenuUsuarioState extends State<MenuUsuario> {
         datos = resultadoUid.docs.first.data();
       }
 
-      // Segunda búsqueda: campo userId, para documentos con el nombre nuevo.
+      // Segunda búsqueda: userId.
       if (datos == null) {
         final resultadoUserId =
             await usuariosRef
@@ -70,7 +55,7 @@ class _MenuUsuarioState extends State<MenuUsuario> {
         }
       }
 
-      // Compatibilidad: comprobar si el UID también es el ID del documento.
+      // Tercera búsqueda: ID del documento.
       if (datos == null) {
         final documento = await usuariosRef.doc(widget.userId).get();
 
@@ -90,26 +75,6 @@ class _MenuUsuarioState extends State<MenuUsuario> {
       }
     } catch (e) {
       debugPrint('Error cargando los datos del usuario: $e');
-=======
-    _cargarDatosCliente();
-  }
-
-  Future<void> _cargarDatosCliente() async {
-    try {
-      final doc =
-          await FirebaseFirestore.instance
-              .collection('clientes')
-              .doc(widget.userId) // Ahora usamos el ID directo
-              .get();
-
-      if (doc.exists) {
-        setState(() {
-          clienteData = doc.data();
-        });
-      }
-    } catch (e) {
-      print('Error cargando datos: $e');
->>>>>>> origin/main
     }
   }
 
@@ -119,11 +84,7 @@ class _MenuUsuarioState extends State<MenuUsuario> {
       decoration: BoxDecoration(
         color: const Color(0xFFF6F3FB),
         borderRadius: BorderRadius.circular(15),
-<<<<<<< HEAD
         boxShadow: const [
-=======
-        boxShadow: [
->>>>>>> origin/main
           BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
         ],
       ),
@@ -152,15 +113,11 @@ class _MenuUsuarioState extends State<MenuUsuario> {
             Navigator.push(
               context,
               MaterialPageRoute(
-<<<<<<< HEAD
                 builder:
                     (context) => CobrosUsuario(
                       userId: widget.userId,
                       uidAuth: widget.userId,
                     ),
-=======
-                builder: (context) => CobrosUsuario(userId: widget.userId),
->>>>>>> origin/main
               ),
             );
           } else if (texto == 'Historial De Pagos') {
@@ -185,15 +142,12 @@ class _MenuUsuarioState extends State<MenuUsuario> {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< HEAD
     String nombre = (usuarioData?['nombreCompleto'] ?? '').toString().trim();
 
     if (nombre.isEmpty) {
       nombre = (usuarioData?['nombre'] ?? '').toString().trim();
     }
 
-=======
->>>>>>> origin/main
     return Scaffold(
       backgroundColor: const Color(0xFFDFFFEF),
       appBar: AppBar(
@@ -201,13 +155,7 @@ class _MenuUsuarioState extends State<MenuUsuario> {
         automaticallyImplyLeading: false,
         centerTitle: true,
         title: Text(
-<<<<<<< HEAD
           nombre.isNotEmpty ? 'Hola, $nombre' : 'Hola, Bienvenido De Nuevo.',
-=======
-          clienteData != null
-              ? 'Hola, ${clienteData!['nombreCompleto']}'
-              : 'Hola, Bienvenido De Nuevo.',
->>>>>>> origin/main
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             color: Colors.black87,

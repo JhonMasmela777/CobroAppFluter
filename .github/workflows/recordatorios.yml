@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 
-name: Probar recordatorios Cobra Tech
-=======
-﻿name: Probar recordatorios Cobramzas
->>>>>>> origin/main
+name: Probar recordatorios Cobra Tech 
 
 on:
   workflow_dispatch:
@@ -33,9 +29,4 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           TEST_EMAIL: jonathancoloradomasmela@gmail.com
-<<<<<<< HEAD
           SEND_TEST_EMAIL: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
-=======
-          SEND_TEST_EMAIL: 'true'
-
->>>>>>> origin/main

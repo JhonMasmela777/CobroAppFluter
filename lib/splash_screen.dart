@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
 import 'package:cobro_app_flutter/inicio.dart';
-=======
-import 'package:hola_mundo/inicio.dart';
->>>>>>> origin/main
 
 void main() {
   runApp(const MyApp());

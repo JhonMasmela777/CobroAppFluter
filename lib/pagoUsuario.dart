@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-<<<<<<< HEAD
 import 'package:cobro_app_flutter/detallePagoUsuario.dart';
-=======
-import 'package:hola_mundo/detallerPagoUsuario.dart';
->>>>>>> origin/main
 
 class PagoUsuario extends StatefulWidget {
   final String creditoId;
@@ -12,7 +8,8 @@ class PagoUsuario extends StatefulWidget {
   final String clienteId;
   final String userId;
 
-  PagoUsuario({
+  const PagoUsuario({
+    super.key,
     required this.creditoId,
     required this.deudaActual,
     required this.clienteId,
@@ -41,20 +38,21 @@ class _PagoUsuarioState extends State<PagoUsuario> {
       });
 
       final nuevoSaldo = widget.deudaActual - valor;
+
       await FirebaseFirestore.instance
           .collection('creditos')
           .doc(widget.creditoId)
           .update({'deuda': nuevoSaldo});
 
-      // Limpiar el campo de texto después de guardar el abono
+      if (!mounted) return;
+
       _valorController.clear();
 
-      // Mostrar SnackBar con icono de éxito
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.green[600],
-          content: Row(
-            children: const [
+          content: const Row(
+            children: [
               Icon(Icons.check_circle, color: Colors.white),
               SizedBox(width: 12),
               Text('Abono guardado correctamente'),
@@ -74,12 +72,13 @@ class _PagoUsuarioState extends State<PagoUsuario> {
         ),
       );
     } catch (e) {
-      // Mostrar SnackBar con icono de error
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red[700],
-          content: Row(
-            children: const [
+          content: const Row(
+            children: [
               Icon(Icons.error, color: Colors.white),
               SizedBox(width: 12),
               Text('No se pudo efectuar el abono'),
@@ -88,14 +87,20 @@ class _PagoUsuarioState extends State<PagoUsuario> {
         ),
       );
 
-      print('Error al guardar abono: $e');
+      debugPrint('Error al guardar abono: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _valorController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFDFFFEF), // Fondo igual a CobrosUsuario
+      backgroundColor: const Color(0xFFDFFFEF),
       appBar: AppBar(
         backgroundColor: const Color(0xFF00C290),
         leading: const BackButton(color: Colors.white),
@@ -103,7 +108,6 @@ class _PagoUsuarioState extends State<PagoUsuario> {
         centerTitle: true,
         elevation: 2,
       ),
-
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Form(
@@ -144,13 +148,17 @@ class _PagoUsuarioState extends State<PagoUsuario> {
                     if (value == null || value.isEmpty) {
                       return 'Por favor ingrese un valor';
                     }
+
                     final v = double.tryParse(value);
+
                     if (v == null || v <= 0) {
                       return 'Ingrese un valor válido mayor que 0';
                     }
+
                     if (v > widget.deudaActual) {
                       return 'El abono no puede ser mayor a la deuda actual';
                     }
+
                     return null;
                   },
                 ),

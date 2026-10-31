@@ -1,36 +1,23 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
 import 'package:cobro_app_flutter/baseDatosAdmin.dart';
 import 'package:cobro_app_flutter/crearClienteAdmin.dart';
 import 'package:cobro_app_flutter/crearUsuario.dart';
 import 'package:cobro_app_flutter/gestionarCreditoAdmin.dart';
 import 'package:cobro_app_flutter/historialPagoUsuario.dart';
 import 'package:cobro_app_flutter/historialPagosAdmin.dart';
-=======
-import 'package:hola_mundo/baseDatosAdmin.dart';
-import 'package:hola_mundo/crearClienteAdmin.dart';
-import 'package:hola_mundo/crearUsuario.dart';
-import 'package:hola_mundo/gestionarCreditoAdmin.dart';
-import 'package:hola_mundo/historialPagoUsuario.dart';
-import 'package:hola_mundo/historialPagosAdmin.dart';
->>>>>>> origin/main
 
 class MenuAdmin extends StatelessWidget {
-  final String userId; // ← Nuevo parámetro para el ID automático
+  final String userId;
 
-  const MenuAdmin({
-    super.key,
-    required this.userId,
-  }); // ← Hacemos el parámetro requerido
+  const MenuAdmin({super.key, required this.userId});
 
-  // Función para construir botones reutilizables
   Widget buildBoton(BuildContext context, IconData icono, String texto) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: Color(0xFFF6F3FB),
+        color: const Color(0xFFF6F3FB),
         borderRadius: BorderRadius.circular(15),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 3)),
         ],
       ),
@@ -38,50 +25,39 @@ class MenuAdmin extends StatelessWidget {
         leading: Icon(icono, color: Colors.blue, size: 30),
         title: Text(
           texto,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         onTap: () {
           if (texto == 'Crear Usuario') {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    (context) =>
-                        CrearUsuario(adminId: userId), // ← Pasamos el ID
+                builder: (context) => CrearUsuario(adminId: userId),
               ),
             );
           } else if (texto == 'Crear Cliente') {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    (context) =>
-                        CrearClienteAdmin(adminId: userId), // ← Pasamos el ID
+                builder: (context) => CrearClienteAdmin(adminId: userId),
               ),
             );
           } else if (texto == 'Base De Datos') {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => BaseDatosAdmin(), // ← Pasamos el ID
-              ),
+              MaterialPageRoute(builder: (context) => BaseDatosAdmin()),
             );
           } else if (texto == 'Gestión De Créditos') {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => GestionCreditosAdmin(), // ← Pasamos el ID
-              ),
+              MaterialPageRoute(builder: (context) => GestionCreditosAdmin()),
             );
           } else if (texto == 'Historial De Pagos') {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => HistorialPagosAdmin(), // ← Pasamos el ID
-              ),
+              MaterialPageRoute(builder: (context) => HistorialPagosAdmin()),
             );
           }
-          // Agregar más rutas según necesidad
         },
       ),
     );
@@ -90,17 +66,17 @@ class MenuAdmin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFDFFFEF),
+      backgroundColor: const Color(0xFFDFFFEF),
       body: Column(
         children: [
           Container(
             width: double.infinity,
-            padding: EdgeInsets.only(top: 60, bottom: 20),
-            color: Color(0xFF00C290),
+            padding: const EdgeInsets.only(top: 60, bottom: 20),
+            color: const Color(0xFF00C290),
             child: Center(
               child: Column(
                 children: [
-                  Text(
+                  const Text(
                     'Hola, Bienvenido De Nuevo.',
                     style: TextStyle(
                       color: Colors.black87,
@@ -108,10 +84,10 @@ class MenuAdmin extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    'ID: $userId', // ← Mostramos el ID (opcional, solo para debug)
-                    style: TextStyle(color: Colors.black54, fontSize: 12),
+                    'ID: $userId',
+                    style: const TextStyle(color: Colors.black54, fontSize: 12),
                   ),
                 ],
               ),
