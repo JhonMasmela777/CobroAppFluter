@@ -186,13 +186,13 @@ async function consultarCuotasPendientes() {
 
       // Enviar correo mediante Resend.
       const { data, error } = await resend.emails.send({
-        from: 'Cobra tech <onboarding@resend.dev>',
+        from: 'Cobramzas <onboarding@resend.dev>',
         to: [destinatario],
-        subject: 'Recordatorio de pago - Cobra tech',
+        subject: 'Recordatorio de pago - Cobramzas',
         text: [
           'Hola,',
           '',
-          'Este es un recordatorio de pago de Cobra tech.',
+          'Este es un recordatorio de pago de Cobramzas.',
           '',
           `Número de cuota: ${cuota.numeroCuota ?? 'No disponible'}`,
           `Valor: ${valorTexto}`,
