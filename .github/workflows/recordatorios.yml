@@ -1,8 +1,9 @@
 
-name: Probar recordatorios Cobra Tech 
+name: Recordatorios automaticos CobraTech
 
 on:
   workflow_dispatch:
+
   schedule:
     - cron: "0 13 * * *"
 
@@ -23,10 +24,10 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Consultar cuotas pendientes
+      - name: Ejecutar recordatorios
         run: node recordatorios/enviar-recordatorios.js
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          TEST_EMAIL: jonathancoloradomasmela@gmail.com
+          TEST_EMAIL: jonathancol oradomasmela@gmail.com
           SEND_TEST_EMAIL: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
