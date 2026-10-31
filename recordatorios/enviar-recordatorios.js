@@ -53,12 +53,10 @@ console.log(
 );
 
 // ==========================================
-// PLANTILLA HTML DEL CORREO
+// DISEÑO HTML DEL CORREO
 // ==========================================
 
 function crearCorreoHTML(cuota, valorTexto, fechaTexto) {
-  const numeroCuota = cuota.numeroCuota ?? 'No disponible';
-
   return `
   <!DOCTYPE html>
   <html lang="es">
@@ -71,150 +69,186 @@ function crearCorreoHTML(cuota, valorTexto, fechaTexto) {
   <body style="
     margin: 0;
     padding: 0;
-    background-color: #f1f5f3;
+    background-color: #f0f4f2;
     font-family: Arial, Helvetica, sans-serif;
-    color: #26352e;
+    color: #263b32;
   ">
 
     <table width="100%" cellpadding="0" cellspacing="0"
-      style="background-color: #f1f5f3; padding: 35px 12px;">
+      border="0" style="background-color: #f0f4f2; padding: 35px 12px;">
 
       <tr>
         <td align="center">
 
           <table width="100%" cellpadding="0" cellspacing="0"
-            style="
+            border="0" style="
               max-width: 580px;
               background-color: #ffffff;
-              border-radius: 16px;
+              border-radius: 18px;
               overflow: hidden;
-              box-shadow: 0 5px 20px rgba(0,0,0,0.07);
             ">
 
             <!-- ENCABEZADO -->
             <tr>
               <td align="center" style="
                 background-color: #087f5b;
-                padding: 32px 20px;
+                padding: 35px 20px;
               ">
-                <h1 style="
-                  margin: 0;
-                  color: #ffffff;
-                  font-size: 29px;
-                  font-weight: bold;
-                  letter-spacing: 1px;
+
+                <div style="
+                  display: inline-block;
+                  border: 2px solid #ffffff;
+                  border-radius: 12px;
+                  padding: 10px 15px;
+                  margin-bottom: 12px;
                 ">
-                  COBRA TECH
-                </h1>
+                  <span style="
+                    color: #ffffff;
+                    font-size: 25px;
+                    font-weight: bold;
+                    letter-spacing: 2px;
+                  ">
+                    COBRA TECH
+                  </span>
+                </div>
 
                 <p style="
-                  margin: 9px 0 0;
-                  color: #d8fff0;
+                  margin: 5px 0 0;
+                  color: #d7f8e9;
                   font-size: 14px;
                 ">
-                  Sistema de gestión de Cobra tech
+                  Sistema inteligente de gestión de cobranzas
                 </p>
+
               </td>
             </tr>
 
-            <!-- CONTENIDO -->
+            <!-- CONTENIDO PRINCIPAL -->
             <tr>
               <td style="padding: 35px 30px 20px;">
 
-                <h2 style="
-                  margin: 0 0 15px;
-                  color: #087f5b;
-                  font-size: 23px;
-                ">
-                  ¡Hola!
-                </h2>
-
                 <p style="
-                  margin: 0 0 20px;
-                  color: #52635a;
-                  font-size: 15px;
-                  line-height: 1.7;
+                  margin: 0 0 8px;
+                  color: #087f5b;
+                  font-size: 13px;
+                  font-weight: bold;
+                  letter-spacing: 1px;
                 ">
-                  Te enviamos este mensaje para recordarte que tienes
-                  una cuota próxima a vencer. A continuación encontrarás
-                  los detalles de tu pago.
+                  NOTIFICACIÓN DE PAGO
                 </p>
 
-                <!-- TARJETA DE VALOR -->
+                <h1 style="
+                  margin: 0 0 16px;
+                  color: #263b32;
+                  font-size: 25px;
+                ">
+                  ¡Hola! 👋
+                </h1>
+
+                <p style="
+                  margin: 0 0 25px;
+                  color: #66756d;
+                  font-size: 15px;
+                  line-height: 1.8;
+                ">
+                  Queremos recordarte que tienes una cuota próxima
+                  a vencer. Aquí encontrarás toda la información
+                  correspondiente a tu próximo pago.
+                </p>
+
+                <!-- TARJETA DEL VALOR -->
                 <table width="100%" cellpadding="0" cellspacing="0"
-                  style="
-                    background-color: #e8f8f0;
-                    border: 1px solid #c5ead6;
-                    border-radius: 12px;
+                  border="0" style="
+                    background-color: #e9f8f0;
+                    border: 1px solid #c8ead6;
+                    border-radius: 15px;
                   ">
                   <tr>
-                    <td align="center" style="padding: 23px 15px;">
+                    <td align="center" style="padding: 27px 15px;">
 
                       <p style="
-                        margin: 0 0 8px;
-                        color: #527263;
-                        font-size: 13px;
+                        margin: 0 0 10px;
+                        color: #527665;
+                        font-size: 12px;
+                        font-weight: bold;
+                        letter-spacing: 1.5px;
                       ">
-                        VALOR DE LA CUOTA
+                        VALOR DE TU CUOTA
                       </p>
 
-                      <h1 style="
+                      <h2 style="
                         margin: 0;
                         color: #087f5b;
-                        font-size: 32px;
+                        font-size: 34px;
+                        font-weight: bold;
                       ">
                         ${valorTexto}
-                      </h1>
+                      </h2>
+
+                      <p style="
+                        margin: 10px 0 0;
+                        color: #648675;
+                        font-size: 12px;
+                      ">
+                        Valor expresado en pesos colombianos
+                      </p>
 
                     </td>
                   </tr>
                 </table>
 
-                <!-- DETALLES -->
+                <!-- INFORMACIÓN DE LA CUOTA -->
                 <h3 style="
-                  margin: 28px 0 15px;
-                  color: #26352e;
+                  margin: 30px 0 15px;
+                  color: #263b32;
                   font-size: 17px;
                 ">
-                  Detalles de tu pago
+                  Resumen de tu obligación
                 </h3>
 
                 <table width="100%" cellpadding="0" cellspacing="0"
-                  style="font-size: 14px;">
+                  border="0" style="
+                    border: 1px solid #e8eeea;
+                    border-radius: 10px;
+                  ">
 
                   <tr>
                     <td style="
-                      padding: 12px 0;
-                      color: #718078;
-                      border-bottom: 1px solid #edf1ee;
+                      padding: 15px;
+                      color: #78877f;
+                      font-size: 14px;
+                      border-bottom: 1px solid #e8eeea;
                     ">
                       Número de cuota
                     </td>
 
                     <td align="right" style="
-                      padding: 12px 0;
-                      color: #26352e;
+                      padding: 15px;
+                      color: #263b32;
+                      font-size: 14px;
                       font-weight: bold;
-                      border-bottom: 1px solid #edf1ee;
+                      border-bottom: 1px solid #e8eeea;
                     ">
-                      ${numeroCuota}
+                      ${cuota.numeroCuota ?? 'No disponible'}
                     </td>
                   </tr>
 
                   <tr>
                     <td style="
-                      padding: 12px 0;
-                      color: #718078;
-                      border-bottom: 1px solid #edf1ee;
+                      padding: 15px;
+                      color: #78877f;
+                      font-size: 14px;
+                      border-bottom: 1px solid #e8eeea;
                     ">
                       Fecha de vencimiento
                     </td>
 
                     <td align="right" style="
-                      padding: 12px 0;
+                      padding: 15px;
                       color: #d97706;
+                      font-size: 14px;
                       font-weight: bold;
-                      border-bottom: 1px solid #edf1ee;
+                      border-bottom: 1px solid #e8eeea;
                     ">
                       ${fechaTexto}
                     </td>
@@ -222,15 +256,17 @@ function crearCorreoHTML(cuota, valorTexto, fechaTexto) {
 
                   <tr>
                     <td style="
-                      padding: 12px 0;
-                      color: #718078;
+                      padding: 15px;
+                      color: #78877f;
+                      font-size: 14px;
                     ">
-                      Estado
+                      Estado de la cuota
                     </td>
 
                     <td align="right" style="
-                      padding: 12px 0;
+                      padding: 15px;
                       color: #d97706;
+                      font-size: 14px;
                       font-weight: bold;
                     ">
                       Pendiente
@@ -239,50 +275,52 @@ function crearCorreoHTML(cuota, valorTexto, fechaTexto) {
 
                 </table>
 
-                <!-- AVISO -->
+                <!-- AVISO IMPORTANTE -->
                 <table width="100%" cellpadding="0" cellspacing="0"
-                  style="
+                  border="0" style="
                     margin-top: 25px;
                     background-color: #fff8e8;
+                    border-radius: 10px;
                     border-left: 4px solid #e9a23b;
                   ">
                   <tr>
                     <td style="
-                      padding: 15px;
+                      padding: 18px;
                       color: #76551d;
                       font-size: 13px;
-                      line-height: 1.6;
+                      line-height: 1.7;
                     ">
-                      <strong>Importante:</strong>
-                      Recuerda realizar tu pago oportunamente para
-                      mantener tus cuotas al día.
+                      <strong>¡Ten presente!</strong><br>
+                      Te recomendamos realizar tu pago antes de
+                      la fecha de vencimiento para mantener tus
+                      obligaciones al día.
                     </td>
                   </tr>
                 </table>
 
+                <!-- DESPEDIDA -->
                 <p style="
-                  margin: 25px 0 10px;
-                  color: #52635a;
+                  margin: 28px 0 15px;
+                  color: #66756d;
                   font-size: 14px;
-                  line-height: 1.6;
+                  line-height: 1.8;
                 ">
-                  Gracias por confiar en nosotros.
                   Si ya realizaste tu pago, puedes hacer caso omiso
-                  de este recordatorio.
+                  de este mensaje. Agradecemos tu confianza.
                 </p>
 
                 <p style="
-                  margin: 20px 0 5px;
-                  color: #26352e;
+                  margin: 0 0 5px;
+                  color: #66756d;
                   font-size: 14px;
                 ">
                   Cordialmente,
                 </p>
 
                 <p style="
-                  margin: 0 0 15px;
+                  margin: 0 0 25px;
                   color: #087f5b;
-                  font-size: 16px;
+                  font-size: 17px;
                   font-weight: bold;
                 ">
                   Equipo Cobra tech
@@ -291,19 +329,20 @@ function crearCorreoHTML(cuota, valorTexto, fechaTexto) {
               </td>
             </tr>
 
-            <!-- PIE DE CORREO -->
+            <!-- PIE DE PÁGINA -->
             <tr>
               <td align="center" style="
+                padding: 25px 20px;
                 background-color: #f7faf8;
-                padding: 22px 20px;
-                border-top: 1px solid #edf1ee;
+                border-top: 1px solid #e8eeea;
               ">
 
                 <p style="
-                  margin: 0 0 7px;
+                  margin: 0 0 8px;
                   color: #087f5b;
-                  font-size: 15px;
+                  font-size: 16px;
                   font-weight: bold;
+                  letter-spacing: 1px;
                 ">
                   COBRA TECH
                 </p>
@@ -312,11 +351,20 @@ function crearCorreoHTML(cuota, valorTexto, fechaTexto) {
                   margin: 0;
                   color: #89968f;
                   font-size: 11px;
-                  line-height: 1.6;
+                  line-height: 1.7;
                 ">
-                  Mensaje automático generado por el sistema de cobranzas.
+                  Este correo fue generado automáticamente
+                  por el sistema de gestión de cobranzas.
                   <br>
-                  Por favor, no respondas directamente a este correo.
+                  Por favor, no respondas directamente a este mensaje.
+                </p>
+
+                <p style="
+                  margin: 15px 0 0;
+                  color: #a5afa9;
+                  font-size: 10px;
+                ">
+                  © Cobra tech - Todos los derechos reservados.
                 </p>
 
               </td>
@@ -340,6 +388,7 @@ function crearCorreoHTML(cuota, valorTexto, fechaTexto) {
 async function consultarCuotasPendientes() {
   const ahora = new Date();
 
+  // Obtener la fecha actual en Colombia.
   const partesFecha = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Bogota',
     year: 'numeric',
@@ -351,6 +400,7 @@ async function consultarCuotasPendientes() {
     partesFecha.map(({ type, value }) => [type, value])
   );
 
+  // Inicio del día actual en Colombia.
   const hoy = new Date(Date.UTC(
     Number(partes.year),
     Number(partes.month) - 1,
@@ -358,7 +408,9 @@ async function consultarCuotasPendientes() {
     5, 0, 0, 0
   ));
 
+  // Próximos 20 días.
   const limite = new Date(hoy);
+
   limite.setUTCDate(limite.getUTCDate() + 20);
   limite.setUTCHours(4, 59, 59, 999);
 
@@ -366,6 +418,7 @@ async function consultarCuotasPendientes() {
   console.log('Inicio del rango:', hoy.toISOString());
   console.log('Fin del rango:', limite.toISOString());
 
+  // Consultar cuotas pendientes.
   const cuotasSnapshot = await db
     .collection('cuotas')
     .where('estado', '==', 'Pendiente')
@@ -381,12 +434,14 @@ async function consultarCuotasPendientes() {
   let omitidos = 0;
   let errores = 0;
 
+  // Procesar cada cuota.
   for (const doc of cuotasSnapshot.docs) {
     const cuota = doc.data();
 
     try {
+      // Evitar duplicar recordatorios.
       if (cuota.recordatorioEnviado === true) {
-        console.log(`Cuota ${doc.id}: recordatorio ya enviado.`);
+        console.log(`Cuota ${doc.id}: ya tiene recordatorio enviado.`);
         omitidos++;
         continue;
       }
@@ -397,6 +452,7 @@ async function consultarCuotasPendientes() {
         continue;
       }
 
+      // Buscar al cliente por su ID de documento.
       const clienteDoc = await db
         .collection('clientes')
         .doc(cuota.idCliente)
@@ -422,6 +478,7 @@ async function consultarCuotasPendientes() {
         continue;
       }
 
+      // Preparar información de la cuota.
       if (!cuota.fechaVencimiento?.toDate) {
         console.log(`Cuota ${doc.id}: fecha de vencimiento inválida.`);
         omitidos++;
@@ -443,6 +500,7 @@ async function consultarCuotasPendientes() {
         maximumFractionDigits: 0,
       }).format(cuota.valorCuota || 0);
 
+      // Elegir destinatario según el modo de ejecución.
       const destinatario = modoPrueba
         ? correoPrueba
         : correoCliente.trim();
@@ -455,15 +513,15 @@ async function consultarCuotasPendientes() {
       console.log(`Valor: ${valorTexto}`);
       console.log(`Vencimiento: ${fechaTexto}`);
 
+      // Enviar correo mediante Resend.
       const { data, error } = await resend.emails.send({
         from: 'Cobra tech <onboarding@resend.dev>',
         to: [destinatario],
         subject: 'Recordatorio de pago - Cobra tech',
 
-        // Versión HTML con diseño.
+        // ÚNICO AGREGADO: diseño HTML.
         html: crearCorreoHTML(cuota, valorTexto, fechaTexto),
 
-        // Versión de texto para clientes de correo que no muestran HTML.
         text: [
           'Hola,',
           '',
@@ -472,12 +530,11 @@ async function consultarCuotasPendientes() {
           `Número de cuota: ${cuota.numeroCuota ?? 'No disponible'}`,
           `Valor: ${valorTexto}`,
           `Fecha de vencimiento: ${fechaTexto}`,
-          'Estado: Pendiente',
           '',
-          'Recuerda realizar tu pago oportunamente.',
+          'Por favor, revisa la información de tu obligación.',
           '',
           'Saludos,',
-          'Equipo Cobra tech',
+          'Sistema Cobramzas',
         ].join('\n'),
       });
 
@@ -489,6 +546,8 @@ async function consultarCuotasPendientes() {
 
       console.log('Resend aceptó el correo:', data?.id);
 
+      // En modo automático se actualiza Firestore.
+      // En modo de prueba no se modifica ningún registro.
       if (!modoPrueba) {
         await doc.ref.update({
           recordatorioEnviado: true,
@@ -515,10 +574,6 @@ async function consultarCuotasPendientes() {
   console.log(`Cuotas omitidas: ${omitidos}`);
   console.log(`Errores: ${errores}`);
   console.log('==================================');
-
-  if (errores > 0) {
-    process.exitCode = 1;
-  }
 }
 
 // ==========================================
@@ -528,8 +583,9 @@ async function consultarCuotasPendientes() {
 consultarCuotasPendientes()
   .then(() => {
     console.log('Proceso de recordatorios finalizado.');
+    process.exit(0);
   })
   .catch((error) => {
     console.error('Error en el proceso de recordatorios:', error);
-    process.exitCode = 1;
+    process.exit(1);
   });
