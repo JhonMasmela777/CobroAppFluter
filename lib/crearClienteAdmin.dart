@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+<<<<<<< HEAD
 import 'package:cobro_app_flutter/crearCreditoAdmin.dart';
+=======
+import 'package:hola_mundo/CrearCreditoAdmin.dart';
+>>>>>>> origin/main
 
 class CrearClienteAdmin extends StatefulWidget {
   final String adminId;

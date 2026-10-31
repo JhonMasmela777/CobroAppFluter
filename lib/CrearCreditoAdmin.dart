@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+<<<<<<< HEAD
 
 class CrearCreditoAdmin extends StatefulWidget {
   final String clienteId;
+=======
+import 'package:intl/intl.dart'; // Para formatear fecha y hora
+
+class CrearCreditoAdmin extends StatefulWidget {
+  final String clienteId; // Cambié de cedula a clienteId
+>>>>>>> origin/main
 
   const CrearCreditoAdmin({super.key, required this.clienteId});
 
@@ -13,6 +20,7 @@ class CrearCreditoAdmin extends StatefulWidget {
 class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
   final _formKey = GlobalKey<FormState>();
 
+<<<<<<< HEAD
   final TextEditingController _deudaController = TextEditingController();
   final TextEditingController _numeroCuotasController = TextEditingController();
 
@@ -20,6 +28,18 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
   String? _frecuenciaSeleccionada;
   bool _cargando = false;
 
+=======
+  // Controllers para campos que siguen siendo texto
+  final TextEditingController _deudaController = TextEditingController();
+  String? _estadoSeleccionado;
+  final List<String> _estados = ['Pendiente', 'Pagado', 'Cancelado'];
+
+  // Variables para dropdowns
+  String? _articuloSeleccionado;
+  String? _frecuenciaSeleccionada;
+
+  // Opciones para dropdown
+>>>>>>> origin/main
   final List<String> _articulos = [
     'Zapatero',
     'Sabana',
@@ -28,6 +48,7 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
     'Cuadro',
   ];
 
+<<<<<<< HEAD
   final List<String> _frecuencias = ['Semanal', 'Quincenal', 'Mensual'];
 
   // Calcula el vencimiento según la frecuencia.
@@ -193,11 +214,33 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
+=======
+  final List<String> _frecuencias = ['Quincenal', 'Mensual', 'Semanal'];
+
+  @override
+  Widget build(BuildContext context) {
+    // Formatear fecha y hora actual
+    final String fechaHoraActual = DateFormat(
+      'dd/MM/yyyy HH:mm:ss',
+    ).format(DateTime.now());
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFEFE9F4),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF00C290),
+        title: const Text('Crear Crédito'),
+        centerTitle: true,
+        leading: BackButton(color: Colors.white),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+>>>>>>> origin/main
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
               Text(
+<<<<<<< HEAD
                 'ID del cliente: ${widget.clienteId}',
                 style: const TextStyle(
                   fontSize: 16,
@@ -230,10 +273,68 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
                 _frecuencias,
                 _frecuenciaSeleccionada,
                 (value) => setState(() => _frecuenciaSeleccionada = value),
+=======
+                'ID del Cliente: ${widget.clienteId}', // Aquí se muestra el ID
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+
+              // Mostrar fecha y hora actual
+              Text(
+                'Fecha y Hora: $fechaHoraActual',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black54,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Dropdown para Artículo
+              _campoDropdown('Artículo', _articulos, _articuloSeleccionado, (
+                String? nuevoValor,
+              ) {
+                setState(() {
+                  _articuloSeleccionado = nuevoValor;
+                });
+              }),
+
+              // Campo Deuda
+              _campoTexto(
+                'Deuda',
+                _deudaController,
+                tipo: TextInputType.number,
+              ),
+
+              // Campo Estado
+              _campoDropdown('Estado', _estados, _estadoSeleccionado, (
+                String? nuevoValor,
+              ) {
+                setState(() {
+                  _estadoSeleccionado = nuevoValor;
+                });
+              }),
+
+              // Dropdown para Frecuencia de Pago
+              _campoDropdown(
+                'Frecuencia de Pago',
+                _frecuencias,
+                _frecuenciaSeleccionada,
+                (String? nuevoValor) {
+                  setState(() {
+                    _frecuenciaSeleccionada = nuevoValor;
+                  });
+                },
+>>>>>>> origin/main
               ),
 
               const SizedBox(height: 20),
 
+<<<<<<< HEAD
               ElevatedButton(
                 onPressed: _cargando ? null : _crearCredito,
                 style: ElevatedButton.styleFrom(
@@ -250,6 +351,47 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
                           'Guardar Crédito',
                           style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
+=======
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      if (_articuloSeleccionado == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Seleccione un artículo'),
+                          ),
+                        );
+                        return;
+                      }
+                      if (_frecuenciaSeleccionada == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Seleccione frecuencia de pago'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      _crearCredito();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF00C290),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 15,
+                    ),
+                  ),
+                  child: const Text(
+                    'Guardar Crédito',
+                    style: TextStyle(fontSize: 18, color: Colors.white),
+                  ),
+                ),
+>>>>>>> origin/main
               ),
             ],
           ),
@@ -264,7 +406,11 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
     TextInputType tipo = TextInputType.text,
   }) {
     return Padding(
+<<<<<<< HEAD
       padding: const EdgeInsets.symmetric(vertical: 8),
+=======
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+>>>>>>> origin/main
       child: TextFormField(
         controller: controller,
         keyboardType: tipo,
@@ -275,6 +421,7 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
         validator: (value) {
+<<<<<<< HEAD
           if (value == null || value.trim().isEmpty) {
             return 'Este campo es obligatorio.';
           }
@@ -293,6 +440,11 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
             }
           }
 
+=======
+          if (value == null || value.isEmpty) {
+            return 'Este campo es obligatorio';
+          }
+>>>>>>> origin/main
           return null;
         },
       ),
@@ -302,6 +454,7 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
   Widget _campoDropdown(
     String label,
     List<String> items,
+<<<<<<< HEAD
     String? seleccionado,
     ValueChanged<String?> onChanged,
   ) {
@@ -309,12 +462,21 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: DropdownButtonFormField<String>(
         value: seleccionado,
+=======
+    String? valorSeleccionado,
+    ValueChanged<String?> onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: InputDecorator(
+>>>>>>> origin/main
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
+<<<<<<< HEAD
         items:
             items
                 .map((item) => DropdownMenuItem(value: item, child: Text(item)))
@@ -324,4 +486,68 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
       ),
     );
   }
+=======
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: valorSeleccionado,
+            isExpanded: true,
+            onChanged: onChanged,
+            items:
+                items
+                    .map(
+                      (item) =>
+                          DropdownMenuItem(value: item, child: Text(item)),
+                    )
+                    .toList(),
+            hint: Text('Seleccione $label'),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _crearCredito() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        await FirebaseFirestore.instance.collection('creditos').add({
+          'articulo': _articuloSeleccionado ?? '',
+          'deuda': double.tryParse(_deudaController.text.trim()) ?? 0.0,
+          'estado': _estadoSeleccionado ?? 'Pendiente',
+          'fechaInicio': Timestamp.now(),
+          'frecuenciaPago': _frecuenciaSeleccionada ?? '',
+          'idCliente': widget.clienteId, // Aquí guardamos el id automático
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Color(0xFF00C290),
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 10),
+                Text('Credito creado exitosamente'),
+              ],
+            ),
+          ),
+        );
+
+        Navigator.pop(context); // Opcional: vuelve a la pantalla anterior
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.red,
+            content: Row(
+              children: [
+                Icon(Icons.error, color: Colors.white),
+                SizedBox(width: 10),
+                Expanded(child: Text('Error al crear Credito: $e')),
+              ],
+            ),
+          ),
+        );
+        ;
+      }
+    }
+  }
+>>>>>>> origin/main
 }

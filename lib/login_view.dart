@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+<<<<<<< HEAD
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:cobro_app_flutter/menuAdmin.dart';
 import 'package:cobro_app_flutter/menuUsuario.dart';
+=======
+import 'package:hola_mundo/menuAdmin.dart';
+import 'package:hola_mundo/menuUsuario.dart';
+import 'package:hola_mundo/globals.dart';
+>>>>>>> origin/main
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -15,6 +21,7 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+<<<<<<< HEAD
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -237,10 +244,57 @@ class _LoginViewState extends State<LoginView> {
           _cargando = false;
         });
       }
+=======
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<void> login() async {
+    try {
+      final QuerySnapshot snapshot =
+          await _firestore
+              .collection('usuarios')
+              .where('email', isEqualTo: emailController.text.trim())
+              .where('contrasena', isEqualTo: passwordController.text.trim())
+              .limit(1) // ← Añadido para optimización
+              .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        final userDoc = snapshot.docs.first;
+        final userData = userDoc.data() as Map<String, dynamic>;
+        final rol = userData['rol'];
+
+        // Cambio clave: Usamos el ID del documento en lugar de la cédula
+        final userId = userDoc.id; // ← ID automático de Firestore
+
+        if (rol == 'administrador') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) =>
+                      MenuAdmin(userId: userId), // ← Aquí pasamos el ID
+            ),
+          );
+        } else if (rol == 'usuario') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MenuUsuario(userId: userId),
+            ),
+          );
+        } else {
+          showError('Rol desconocido');
+        }
+      } else {
+        showError('Correo o contraseña incorrectos');
+      }
+    } catch (e) {
+      showError('Error al iniciar sesión: $e');
+>>>>>>> origin/main
     }
   }
 
   void showError(String mensaje) {
+<<<<<<< HEAD
     if (!mounted) return;
 
     ScaffoldMessenger.of(context)
@@ -255,6 +309,11 @@ class _LoginViewState extends State<LoginView> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+=======
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(mensaje)));
+>>>>>>> origin/main
   }
 
   @override
@@ -268,25 +327,36 @@ class _LoginViewState extends State<LoginView> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Icon(Icons.show_chart, color: Colors.teal, size: 80),
+<<<<<<< HEAD
 
               const SizedBox(height: 30),
 
               const Text(
                 'Cobra Tech',
+=======
+              const SizedBox(height: 30),
+              const Text(
+                'CobraTech',
+>>>>>>> origin/main
                 style: TextStyle(
                   fontSize: 30,
                   color: Colors.teal,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+<<<<<<< HEAD
 
               const SizedBox(height: 10),
 
+=======
+              const SizedBox(height: 10),
+>>>>>>> origin/main
               const Text(
                 'Inicia sesión para continuar',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 15, color: Colors.black54),
               ),
+<<<<<<< HEAD
 
               const SizedBox(height: 40),
 
@@ -297,6 +367,13 @@ class _LoginViewState extends State<LoginView> {
                 decoration: InputDecoration(
                   labelText: 'Correo electrónico',
                   prefixIcon: const Icon(Icons.email_outlined),
+=======
+              const SizedBox(height: 40),
+              TextField(
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Correo',
+>>>>>>> origin/main
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -304,21 +381,29 @@ class _LoginViewState extends State<LoginView> {
                   ),
                 ),
               ),
+<<<<<<< HEAD
 
               const SizedBox(height: 20),
 
+=======
+              const SizedBox(height: 20),
+>>>>>>> origin/main
               TextField(
                 controller: passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Contraseña',
+<<<<<<< HEAD
                   prefixIcon: const Icon(Icons.lock_outline),
+=======
+>>>>>>> origin/main
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
+<<<<<<< HEAD
                 onSubmitted: (_) {
                   if (!_cargando) login();
                 },
@@ -359,6 +444,29 @@ class _LoginViewState extends State<LoginView> {
                               color: Colors.white,
                             ),
                           ),
+=======
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: login,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 15,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                ),
+                child: const Text(
+                  'Iniciar sesión',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+>>>>>>> origin/main
                 ),
               ),
             ],

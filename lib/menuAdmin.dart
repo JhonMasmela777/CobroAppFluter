@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:cobro_app_flutter/baseDatosAdmin.dart';
 import 'package:cobro_app_flutter/crearClienteAdmin.dart';
 import 'package:cobro_app_flutter/crearUsuario.dart';
 import 'package:cobro_app_flutter/gestionarCreditoAdmin.dart';
 import 'package:cobro_app_flutter/historialPagoUsuario.dart';
 import 'package:cobro_app_flutter/historialPagosAdmin.dart';
+=======
+import 'package:hola_mundo/baseDatosAdmin.dart';
+import 'package:hola_mundo/crearClienteAdmin.dart';
+import 'package:hola_mundo/crearUsuario.dart';
+import 'package:hola_mundo/gestionarCreditoAdmin.dart';
+import 'package:hola_mundo/historialPagoUsuario.dart';
+import 'package:hola_mundo/historialPagosAdmin.dart';
+>>>>>>> origin/main
 
 class MenuAdmin extends StatelessWidget {
   final String userId; // ← Nuevo parámetro para el ID automático

@@ -2,21 +2,32 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GestionCreditosAdmin extends StatefulWidget {
+<<<<<<< HEAD
   const GestionCreditosAdmin({super.key});
 
   @override
   State<GestionCreditosAdmin> createState() => _GestionCreditosAdminState();
+=======
+  @override
+  _GestionCreditosAdminState createState() => _GestionCreditosAdminState();
+>>>>>>> origin/main
 }
 
 class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
   final CollectionReference creditosRef = FirebaseFirestore.instance.collection(
     'creditos',
   );
+<<<<<<< HEAD
 
   final CollectionReference clientesRef = FirebaseFirestore.instance.collection(
     'clientes',
   );
 
+=======
+  final CollectionReference clientesRef = FirebaseFirestore.instance.collection(
+    'clientes',
+  );
+>>>>>>> origin/main
   final CollectionReference usuariosRef = FirebaseFirestore.instance.collection(
     'usuarios',
   );
@@ -32,6 +43,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
 
   Future<void> cargarCobradores() async {
     try {
+<<<<<<< HEAD
       // Leemos los perfiles para admitir las dos estructuras:
       // userId y uid.
       final snapshot = await usuariosRef.get();
@@ -66,10 +78,21 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
 
       if (!mounted) return;
 
+=======
+      final snapshot =
+          await usuariosRef.where('rol', isEqualTo: 'usuario').get();
+      final lista =
+          snapshot.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            data['id'] = data['uid']; // ← ahora se usa el campo uid
+            return data;
+          }).toList();
+>>>>>>> origin/main
       setState(() {
         cobradores = lista;
         cargandoCobradores = false;
       });
+<<<<<<< HEAD
 
       debugPrint('COBRADORES CARGADOS: ${cobradores.length}');
 
@@ -87,6 +110,22 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
         SnackBar(
           backgroundColor: Colors.red,
           content: Text('Error cargando cobradores: $e'),
+=======
+    } catch (e) {
+      setState(() {
+        cargandoCobradores = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(child: Text('Error cargando cobradores: $e')),
+            ],
+          ),
+>>>>>>> origin/main
         ),
       );
     }
@@ -96,12 +135,25 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
     try {
       await creditosRef.doc(docId).update({'estado': nuevoEstado});
     } catch (e) {
+<<<<<<< HEAD
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red,
           content: Text('Error al actualizar estado: $e'),
+=======
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(child: Text('Error al actualizar estado: $e')),
+            ],
+          ),
+>>>>>>> origin/main
         ),
       );
     }
@@ -109,6 +161,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
 
   Future<void> asignarCobrador(String creditoId, String idCobrador) async {
     try {
+<<<<<<< HEAD
       debugPrint('CRÉDITO: $creditoId');
       debugPrint('UID DEL COBRADOR: $idCobrador');
 
@@ -131,6 +184,35 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
         SnackBar(
           backgroundColor: Colors.red,
           content: Text('Error al asignar cobrador: $e'),
+=======
+      await creditosRef.doc(creditoId).update({
+        'cedulaCobradorAsignado': idCobrador,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Cobrador Asignado Correctamente'),
+            ],
+          ),
+        ),
+      );
+      setState(() {});
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(child: Text('Error al asignar cobrador: $e')),
+            ],
+          ),
+>>>>>>> origin/main
         ),
       );
     }
@@ -138,6 +220,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
 
   Future<String> obtenerNombreCliente(String idCliente) async {
     try {
+<<<<<<< HEAD
       // Primero comprobamos si idCliente es el ID del documento.
       final documento = await clientesRef.doc(idCliente).get();
 
@@ -150,10 +233,14 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
 
       // Compatibilidad si idCliente contiene una cédula.
       final consulta =
+=======
+      final querySnapshot =
+>>>>>>> origin/main
           await clientesRef
               .where('cedula', isEqualTo: idCliente)
               .limit(1)
               .get();
+<<<<<<< HEAD
 
       if (consulta.docs.isNotEmpty) {
         final data = consulta.docs.first.data() as Map<String, dynamic>;
@@ -165,6 +252,15 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
       return 'Cliente no encontrado';
     } catch (e) {
       debugPrint('Error buscando cliente: $e');
+=======
+      if (querySnapshot.docs.isNotEmpty) {
+        final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
+        return data['nombreCompleto'] ?? 'Sin nombre';
+      } else {
+        return 'Cliente no encontrado';
+      }
+    } catch (e) {
+>>>>>>> origin/main
       return 'Error al obtener nombre';
     }
   }
@@ -172,20 +268,33 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       backgroundColor: const Color(0xFFDFFFEF),
       appBar: AppBar(
         backgroundColor: const Color(0xFF00C290),
         title: const Text(
+=======
+      backgroundColor: Color(0xFFDFFFEF),
+      appBar: AppBar(
+        backgroundColor: Color(0xFF00C290),
+        title: Text(
+>>>>>>> origin/main
           'Gestión De Créditos',
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0,
+<<<<<<< HEAD
         leading: const BackButton(color: Colors.white),
+=======
+        automaticallyImplyLeading: true, // Activamos el botón de atrás
+        leading: BackButton(color: Colors.white), // Flecha blanca
+>>>>>>> origin/main
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: creditosRef.snapshots(),
         builder: (context, snapshot) {
+<<<<<<< HEAD
           if (snapshot.hasError) {
             return const Center(child: Text('Error al cargar los créditos'));
           }
@@ -202,10 +311,22 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
+=======
+          if (!snapshot.hasData)
+            return Center(child: CircularProgressIndicator());
+
+          final creditos = snapshot.data!.docs;
+          if (creditos.isEmpty)
+            return Center(child: Text('No hay créditos registrados.'));
+
+          return ListView.builder(
+            padding: EdgeInsets.all(16),
+>>>>>>> origin/main
             itemCount: creditos.length,
             itemBuilder: (context, index) {
               final credito = creditos[index];
               final docId = credito.id;
+<<<<<<< HEAD
 
               final data = credito.data() as Map<String, dynamic>;
 
@@ -217,13 +338,28 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                   (data['cedulaCobradorAsignado'] ?? '').toString().trim();
 
               final sinAsignar = asignadoA.isEmpty;
+=======
+              final estado = credito['estado'];
+              final idCliente = credito['idCliente'];
+
+              final asignadoA =
+                  credito.data().toString().contains('cedulaCobradorAsignado')
+                      ? credito['cedulaCobradorAsignado']
+                      : 'Sin asignar';
+>>>>>>> origin/main
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
+<<<<<<< HEAD
                   color: const Color(0xFFF6F3FB),
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: const [
+=======
+                  color: Color(0xFFF6F3FB),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+>>>>>>> origin/main
                     BoxShadow(
                       color: Colors.black12,
                       blurRadius: 6,
@@ -238,6 +374,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                     children: [
                       FutureBuilder<String>(
                         future: obtenerNombreCliente(idCliente),
+<<<<<<< HEAD
                         builder: (context, nombreSnapshot) {
                           if (nombreSnapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -248,6 +385,19 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                             'Cliente: $idCliente - '
                             '${nombreSnapshot.data ?? 'Sin nombre'}',
                             style: const TextStyle(
+=======
+                        builder: (context, snapshotNombre) {
+                          if (snapshotNombre.connectionState ==
+                              ConnectionState.waiting)
+                            return Text('Cargando cliente...');
+                          if (snapshotNombre.hasError)
+                            return Text('Error al cargar cliente');
+                          final nombreCliente =
+                              snapshotNombre.data ?? 'Sin nombre';
+                          return Text(
+                            'Cliente: $idCliente - $nombreCliente',
+                            style: TextStyle(
+>>>>>>> origin/main
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
                               color: Colors.indigo,
@@ -255,6 +405,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                           );
                         },
                       ),
+<<<<<<< HEAD
                       const SizedBox(height: 8),
                       Text('Artículo: ${data['articulo'] ?? 'No registrado'}'),
                       Text('Deuda: \$${data['deuda'] ?? 0}'),
@@ -271,31 +422,70 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                       const SizedBox(height: 16),
 
                       if (estado.trim().toLowerCase() == 'pendiente') ...[
+=======
+                      SizedBox(height: 8),
+                      Text('Artículo: ${credito['articulo']}'),
+                      Text('Deuda: \$${credito['deuda']}'),
+                      Text('Frecuencia de pago: ${credito['frecuenciaPago']}'),
+                      Text('Estado actual: $estado'),
+                      Text('Asignado a: $asignadoA'),
+                      SizedBox(height: 16),
+                      if (estado == 'Pendiente') ...[
+>>>>>>> origin/main
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
                             ElevatedButton.icon(
                               onPressed:
                                   () => actualizarEstado(docId, 'pagado'),
+<<<<<<< HEAD
                               icon: const Icon(Icons.check),
                               label: const Text('Pagado'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 foregroundColor: Colors.white,
+=======
+                              icon: Icon(Icons.check),
+                              label: Text('Pagado'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+>>>>>>> origin/main
                               ),
                             ),
                             ElevatedButton.icon(
                               onPressed:
                                   () => actualizarEstado(docId, 'cancelado'),
+<<<<<<< HEAD
                               icon: const Icon(Icons.cancel),
                               label: const Text('Cancelar'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
+=======
+                              icon: Icon(Icons.cancel),
+                              label: Text('Cancelar'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+>>>>>>> origin/main
                               ),
                             ),
                           ],
                         ),
+<<<<<<< HEAD
                         const SizedBox(height: 10),
 
                         if (sinAsignar) ...[
@@ -330,6 +520,34 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                             padding: EdgeInsets.symmetric(vertical: 8),
                             child: Text(
                               'Este crédito ya tiene un cobrador asignado.',
+=======
+                        SizedBox(height: 10),
+                        if (asignadoA == 'Sin asignar') ...[
+                          cargandoCobradores
+                              ? Center(child: CircularProgressIndicator())
+                              : DropdownButtonFormField<String>(
+                                hint: Text("Asignar cobrador"),
+                                onChanged: (idSeleccionado) {
+                                  if (idSeleccionado != null) {
+                                    asignarCobrador(docId, idSeleccionado);
+                                  }
+                                },
+                                items:
+                                    cobradores.map((usuario) {
+                                      return DropdownMenuItem<String>(
+                                        value: usuario['id'],
+                                        child: Text(
+                                          '${usuario['nombre']} (${usuario['cedula']})',
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                        ] else
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              'Cobrador asignado: $asignadoA',
+>>>>>>> origin/main
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.green,

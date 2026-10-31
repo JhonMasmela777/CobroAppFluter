@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+<<<<<<< HEAD
 import 'package:cobro_app_flutter/detallePagoUsuario.dart';
+=======
+import 'package:hola_mundo/detallerPagoUsuario.dart';
+>>>>>>> origin/main
 
 class PagoUsuario extends StatefulWidget {
   final String creditoId;
