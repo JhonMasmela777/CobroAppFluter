@@ -1,512 +1,359 @@
 
 const { initializeApp, cert } = require('firebase-admin/app');
-const {
-  getFirestore,
-  Timestamp,
-} = require('firebase-admin/firestore');
+const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 const { Resend } = require('resend');
 
-// ==========================================
-// CONFIGURACIÓN DE FIREBASE
-// ==========================================
+// ======================================================
+// CONFIGURACIÓN
+// ======================================================
 
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+const resendApiKey = process.env.RESEND_API_KEY;
+const correoPrueba = process.env.TEST_EMAIL;
+const permitirPrueba = process.env.SEND_TEST_EMAIL === 'true';
 
 if (!serviceAccountJson) {
   throw new Error('Falta configurar FIREBASE_SERVICE_ACCOUNT.');
 }
 
-const serviceAccount = JSON.parse(serviceAccountJson);
-
 initializeApp({
-  credential: cert(serviceAccount),
+  credential: cert(JSON.parse(serviceAccountJson)),
 });
 
 const db = getFirestore();
 
-// ==========================================
-// CONFIGURACIÓN DE RESEND
-// ==========================================
+// ======================================================
+// FECHAS Y FORMATO COLOMBIA
+// ======================================================
 
-const apiKey = process.env.RESEND_API_KEY;
+function obtenerInicioDiaColombia() {
+  const partes = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Bogota',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    })
+      .formatToParts(new Date())
+      .map(({ type, value }) => [type, value])
+  );
 
-if (!apiKey) {
-  throw new Error('Falta configurar RESEND_API_KEY.');
+  return new Date(
+    Date.UTC(
+      Number(partes.year),
+      Number(partes.month) - 1,
+      Number(partes.day),
+      5, 0, 0, 0
+    )
+  );
 }
 
-const resend = new Resend(apiKey);
-
-const correoPrueba = process.env.TEST_EMAIL;
-
-if (!correoPrueba) {
-  throw new Error('Falta configurar TEST_EMAIL.');
+function fechaColombia(fecha) {
+  return new Intl.DateTimeFormat('es-CO', {
+    timeZone: 'America/Bogota',
+    dateStyle: 'long',
+  }).format(fecha);
 }
 
-// true = prueba manual
-// false = envío automático a clientes
-const modoPrueba = process.env.SEND_TEST_EMAIL === 'true';
-
-console.log(
-  modoPrueba
-    ? 'MODO DE PRUEBA ACTIVADO'
-    : 'MODO AUTOMÁTICO ACTIVADO'
-);
-
-// ==========================================
-// BUSCAR CLIENTE MEDIANTE IDCLIENTE
-// ==========================================
-
-async function buscarCliente(idCliente) {
-
-  // Primera búsqueda: UID como ID del documento.
-  let clienteDoc = await db
-    .collection('clientes')
-    .doc(idCliente)
-    .get();
-
-  if (clienteDoc.exists) {
-    return clienteDoc;
-  }
-
-  // Segunda búsqueda: UID almacenado en el campo uid.
-  let resultado = await db
-    .collection('clientes')
-    .where('uid', '==', idCliente)
-    .limit(1)
-    .get();
-
-  if (!resultado.empty) {
-    return resultado.docs[0];
-  }
-
-  // Tercera búsqueda: UID almacenado en el campo idCliente.
-  resultado = await db
-    .collection('clientes')
-    .where('idCliente', '==', idCliente)
-    .limit(1)
-    .get();
-
-  if (!resultado.empty) {
-    return resultado.docs[0];
-  }
-
-  return null;
-}
-
-// ==========================================
-// BUSCAR CRÉDITOS MEDIANTE IDCLIENTE
-// ==========================================
-
-async function buscarCreditos(idCliente) {
-  return await db
-    .collection('creditos')
-    .where('idCliente', '==', idCliente)
-    .get();
-}
-
-// ==========================================
-// PROTEGER TEXTO PARA HTML
-// ==========================================
-
-function escaparHTML(texto) {
-  return String(texto ?? '')
+function escaparHTML(valor) {
+  return String(valor)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/'/g, '&#39;');
 }
 
-// ==========================================
-// DISEÑO HTML DEL CORREO
-// ==========================================
+// ======================================================
+// PLANTILLA DEL CORREO
+// ======================================================
 
-function crearCorreoHTML(cuota, valorTexto, fechaTexto, nombreCliente) {
+function crearPlantillaCorreo({
+  nombre,
+  numeroCuota,
+  valorTexto,
+  fechaVencimiento,
+}) {
+  const nombreSeguro = escaparHTML(nombre || 'cliente');
+  const cuotaSegura = escaparHTML(numeroCuota);
+  const valorSeguro = escaparHTML(valorTexto);
+  const fechaSegura = escaparHTML(fechaVencimiento);
 
-  return `
-  <!DOCTYPE html>
-  <html lang="es">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recordatorio de pago</title>
-  </head>
+  const html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recordatorio de pago | Cobramzas</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">
 
-  <body style="margin:0;padding:0;background-color:#f3f6f4;font-family:Arial,sans-serif;">
+  <div style="display:none;font-size:1px;color:#f1f5f9;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+    Le recordamos amablemente la próxima fecha de vencimiento de su cuota.
+  </div>
 
-    <table width="100%" cellpadding="0" cellspacing="0"
-      style="padding:35px 12px;background-color:#f3f6f4;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+    style="background-color:#f1f5f9;padding:30px 12px;">
+    <tr>
+      <td align="center">
 
-      <tr>
-        <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+          style="max-width:600px;background-color:#ffffff;border-radius:14px;overflow:hidden;">
 
-          <table width="100%" cellpadding="0" cellspacing="0"
-            style="max-width:580px;background-color:#ffffff;border-radius:14px;overflow:hidden;">
+          <tr>
+            <td style="background-color:#166534;padding:28px 30px;text-align:center;">
+              <div style="font-size:29px;font-weight:bold;color:#ffffff;letter-spacing:1px;">
+                Cobramzas
+              </div>
+              <div style="font-size:13px;color:#dcfce7;margin-top:8px;">
+                Gestión de créditos y cobranzas
+              </div>
+            </td>
+          </tr>
 
-            <tr>
-              <td style="background-color:#176b45;padding:30px;text-align:center;">
+          <tr>
+            <td style="padding:32px 30px 18px;">
 
-                <h1 style="margin:0;color:#ffffff;font-size:28px;">
-                  COBRAMZAS
-                </h1>
+              <h1 style="font-size:22px;color:#166534;margin:0 0 20px;">
+                Recordatorio de pago
+              </h1>
 
-                <p style="margin:8px 0 0;color:#e5f5eb;font-size:14px;">
-                  Recordatorios de pago
-                </p>
+              <p style="font-size:15px;line-height:1.7;margin:0 0 14px;">
+                Apreciado cliente <strong>${nombreSeguro}</strong>:
+              </p>
 
-              </td>
-            </tr>
+              <p style="font-size:15px;line-height:1.7;margin:0 0 14px;">
+                Reciba un cordial saludo de parte de Cobramzas.
+                Nos permitimos recordarle amablemente que su cuota
+                tiene una fecha de vencimiento próxima. Le invitamos
+                a ponerse al día con su obligación en la fecha establecida.
+              </p>
 
-            <tr>
-              <td style="padding:32px 28px;">
+              <p style="font-size:15px;line-height:1.7;margin:0 0 22px;">
+                A continuación, encontrará los detalles de su cuota:
+              </p>
 
-                <h2 style="color:#24352b;font-size:21px;margin-top:0;">
-                  Hola, ${escaparHTML(nombreCliente)}
-                </h2>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+                style="background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;">
+                <tr>
+                  <td style="padding:20px;">
 
-                <p style="color:#59665e;font-size:15px;line-height:1.7;">
-                  Te enviamos este mensaje para recordarte que tienes una cuota pendiente de pago.
-                  A continuación encontrarás los detalles:
-                </p>
+                    <div style="font-size:13px;color:#64748b;margin-bottom:6px;">
+                      Valor de la cuota
+                    </div>
 
-                <table width="100%" cellpadding="0" cellspacing="0"
-                  style="background-color:#f2f8f4;border-radius:10px;padding:20px;margin:22px 0;">
+                    <div style="font-size:28px;font-weight:bold;color:#166534;margin-bottom:20px;">
+                      ${valorSeguro}
+                    </div>
 
-                  <tr>
-                    <td style="padding:9px 0;color:#66736b;font-size:14px;">
-                      Número de cuota
-                    </td>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="padding:10px 0;border-top:1px solid #d1fae5;font-size:14px;color:#64748b;">
+                          Número de cuota
+                        </td>
+                        <td align="right" style="padding:10px 0;border-top:1px solid #d1fae5;font-size:14px;font-weight:bold;">
+                          ${cuotaSegura}
+                        </td>
+                      </tr>
 
-                    <td align="right" style="padding:9px 0;color:#24352b;font-weight:bold;">
-                      ${escaparHTML(cuota.numeroCuota ?? 'No disponible')}
-                    </td>
-                  </tr>
+                      <tr>
+                        <td style="padding:10px 0;border-top:1px solid #d1fae5;font-size:14px;color:#64748b;">
+                          Fecha de vencimiento
+                        </td>
+                        <td align="right" style="padding:10px 0;border-top:1px solid #d1fae5;font-size:14px;font-weight:bold;">
+                          ${fechaSegura}
+                        </td>
+                      </tr>
+                    </table>
 
-                  <tr>
-                    <td style="padding:9px 0;color:#66736b;font-size:14px;">
-                      Valor a pagar
-                    </td>
+                  </td>
+                </tr>
+              </table>
 
-                    <td align="right" style="padding:9px 0;color:#176b45;font-size:18px;font-weight:bold;">
-                      ${escaparHTML(valorTexto)}
-                    </td>
-                  </tr>
+              <p style="font-size:14px;line-height:1.7;margin:22px 0 14px;">
+                Si ya realizó el pago, puede hacer caso omiso a este
+                recordatorio. Si tiene alguna inquietud, comuníquese
+                con el responsable de su crédito por los canales habituales.
+              </p>
 
-                  <tr>
-                    <td style="padding:9px 0;color:#66736b;font-size:14px;">
-                      Fecha de vencimiento
-                    </td>
+              <p style="font-size:14px;line-height:1.7;margin:0;">
+                Agradecemos su atención y confianza.
+              </p>
 
-                    <td align="right" style="padding:9px 0;color:#24352b;font-weight:bold;">
-                      ${escaparHTML(fechaTexto)}
-                    </td>
-                  </tr>
+              <p style="font-size:14px;line-height:1.7;margin:22px 0 0;">
+                Cordialmente,<br>
+                <strong style="color:#166534;">Equipo de Cobramzas</strong>
+              </p>
 
-                  <tr>
-                    <td style="padding:9px 0;color:#66736b;font-size:14px;">
-                      Estado
-                    </td>
+            </td>
+          </tr>
 
-                    <td align="right" style="padding:9px 0;color:#d97706;font-weight:bold;">
-                      Pendiente
-                    </td>
-                  </tr>
+          <tr>
+            <td style="background-color:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 25px;text-align:center;">
+              <p style="font-size:12px;line-height:1.6;color:#64748b;margin:0;">
+                Mensaje generado por el sistema de gestión de créditos y cobranzas Cobramzas.
+                <br>Correo de demostración académica.
+              </p>
+            </td>
+          </tr>
 
-                </table>
+        </table>
 
-                <p style="color:#59665e;font-size:14px;line-height:1.7;">
-                  Te invitamos a realizar tu pago oportunamente para mantener tus obligaciones al día.
-                </p>
+      </td>
+    </tr>
+  </table>
 
-                <p style="color:#24352b;font-size:15px;margin-top:28px;">
-                  Cordialmente,<br>
-                  <strong>Equipo Cobramzas</strong>
-                </p>
+</body>
+</html>`;
 
-              </td>
-            </tr>
+  const text = [
+    `Apreciado cliente ${nombre || 'cliente'}:`,
+    '',
+    'Reciba un cordial saludo de parte de Cobramzas.',
+    'Le recordamos amablemente la próxima fecha de vencimiento de su cuota.',
+    'Le invitamos a ponerse al día con su obligación en la fecha establecida.',
+    '',
+    `Número de cuota: ${numeroCuota}`,
+    `Valor: ${valorTexto}`,
+    `Fecha de vencimiento: ${fechaVencimiento}`,
+    '',
+    'Si ya realizó el pago, puede hacer caso omiso a este recordatorio.',
+    '',
+    'Cordialmente,',
+    'Equipo de Cobramzas',
+    '',
+    'Correo de demostración académica.',
+  ].join('\n');
 
-            <tr>
-              <td style="background-color:#f3f6f4;padding:20px;text-align:center;">
-
-                <p style="margin:0;color:#78847c;font-size:12px;line-height:1.6;">
-                  Este es un mensaje automático de recordatorio de pago.
-                  Por favor, no respondas a este correo.
-                </p>
-
-                <p style="margin:10px 0 0;color:#176b45;font-size:13px;font-weight:bold;">
-                  COBRAMZAS
-                </p>
-
-              </td>
-            </tr>
-
-          </table>
-
-        </td>
-      </tr>
-
-    </table>
-
-  </body>
-  </html>
-  `;
+  return { html, text };
 }
 
-// ==========================================
-// CONSULTAR Y ENVIAR RECORDATORIOS
-// ==========================================
+// ======================================================
+// CONSULTAR CUOTAS PENDIENTES
+// ======================================================
 
 async function consultarCuotasPendientes() {
-
-  const ahora = new Date();
-
-  // Obtener la fecha actual en Colombia.
-  const partesFecha = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Bogota',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(ahora);
-
-  const partes = Object.fromEntries(
-    partesFecha.map(({ type, value }) => [type, value])
-  );
-
-  // Inicio del día actual en Colombia.
-  const hoy = new Date(Date.UTC(
-    Number(partes.year),
-    Number(partes.month) - 1,
-    Number(partes.day),
-    5, 0, 0, 0
-  ));
-
-  // Próximos 20 días.
+  const hoy = obtenerInicioDiaColombia();
   const limite = new Date(hoy);
 
   limite.setUTCDate(limite.getUTCDate() + 20);
   limite.setUTCHours(4, 59, 59, 999);
 
-  console.log('Fecha actual en UTC:', ahora.toISOString());
   console.log('Inicio del rango:', hoy.toISOString());
   console.log('Fin del rango:', limite.toISOString());
 
-  // Consultar cuotas pendientes.
-  const cuotasSnapshot = await db
+  const snapshot = await db
     .collection('cuotas')
     .where('estado', '==', 'Pendiente')
     .where('fechaVencimiento', '>=', Timestamp.fromDate(hoy))
     .where('fechaVencimiento', '<=', Timestamp.fromDate(limite))
     .get();
 
-  console.log(
-    `Cuotas pendientes encontradas: ${cuotasSnapshot.size}`
-  );
+  console.log(`Cuotas encontradas: ${snapshot.size}`);
 
-  let enviados = 0;
-  let omitidos = 0;
-  let errores = 0;
-
-  // Procesar cada cuota.
-  for (const doc of cuotasSnapshot.docs) {
-
-    const cuota = doc.data();
-
-    try {
-
-      // Evitar duplicar recordatorios.
-      if (cuota.recordatorioEnviado === true) {
-        console.log(`Cuota ${doc.id}: ya tiene recordatorio enviado.`);
-        omitidos++;
-        continue;
-      }
-
-      // Obtener ID del cliente.
-      const idCliente = cuota.idCliente;
-
-      if (!idCliente) {
-        console.log(`Cuota ${doc.id}: no tiene idCliente.`);
-        omitidos++;
-        continue;
-      }
-
-      console.log('----------------------------------');
-      console.log(`Cuota: ${doc.id}`);
-      console.log(`ID Cliente: ${idCliente}`);
-
-      // Buscar cliente por idCliente.
-      const clienteDoc = await buscarCliente(idCliente);
-
-      if (!clienteDoc) {
-        console.log(`No se encontró el cliente: ${idCliente}`);
-        omitidos++;
-        continue;
-      }
-
-      const cliente = clienteDoc.data();
-
-      console.log('Cliente encontrado:', clienteDoc.id);
-
-      // Obtener correo electrónico.
-      const correoCliente = cliente.correoElectronico;
-
-      if (
-        typeof correoCliente !== 'string' ||
-        !correoCliente.trim()
-      ) {
-        console.log(
-          `El cliente ${idCliente} no tiene un correo válido.`
-        );
-        omitidos++;
-        continue;
-      }
-
-      // Buscar créditos mediante idCliente.
-      const creditosSnapshot = await buscarCreditos(idCliente);
-
-      console.log(
-        `Créditos encontrados para el cliente: ${creditosSnapshot.size}`
-      );
-
-      // La cuota ya tiene su propio idCliente.
-      // La búsqueda de créditos es de verificación.
-      if (creditosSnapshot.empty) {
-        console.log(
-          `Advertencia: no se encontraron créditos para ${idCliente}.`
-        );
-      }
-
-      // Verificar fecha de vencimiento.
-      if (!cuota.fechaVencimiento?.toDate) {
-        console.log(`Cuota ${doc.id}: fecha de vencimiento inválida.`);
-        omitidos++;
-        continue;
-      }
-
-      const fechaVencimiento = cuota.fechaVencimiento.toDate();
-
-      const fechaTexto = new Intl.DateTimeFormat('es-CO', {
-        timeZone: 'America/Bogota',
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      }).format(fechaVencimiento);
-
-      const valorTexto = new Intl.NumberFormat('es-CO', {
-        style: 'currency',
-        currency: 'COP',
-        maximumFractionDigits: 0,
-      }).format(cuota.valorCuota || 0);
-
-      const nombreCliente =
-        cliente.nombre ||
-        cliente.nombreCompleto ||
-        'Cliente';
-
-      // Elegir destinatario según el modo.
-      const destinatario = modoPrueba
-        ? correoPrueba
-        : correoCliente.trim();
-
-      console.log(`Destinatario: ${destinatario}`);
-      console.log(`Número de cuota: ${cuota.numeroCuota}`);
-      console.log(`Valor: ${valorTexto}`);
-      console.log(`Vencimiento: ${fechaTexto}`);
-
-      // Preparar mensaje de correo.
-      const { data, error } = await resend.emails.send({
-
-        from: 'Cobramzas <onboarding@resend.dev>',
-
-        to: [destinatario],
-
-        subject: 'Recordatorio de pago - Cobramzas',
-
-        text: [
-          `Hola ${nombreCliente},`,
-          '',
-          'Este es un recordatorio de pago de Cobramzas.',
-          '',
-          `Número de cuota: ${cuota.numeroCuota ?? 'No disponible'}`,
-          `Valor: ${valorTexto}`,
-          `Fecha de vencimiento: ${fechaTexto}`,
-          '',
-          'Por favor, revisa la información de tu obligación.',
-          '',
-          'Saludos,',
-          'Equipo Cobramzas',
-        ].join('\n'),
-
-        html: crearCorreoHTML(
-          cuota,
-          valorTexto,
-          fechaTexto,
-          nombreCliente
-        ),
-      });
-
-      if (error) {
-        console.error(
-          `Resend rechazó la cuota ${doc.id}:`,
-          error
-        );
-
-        errores++;
-        continue;
-      }
-
-      console.log('Resend aceptó el correo:', data?.id);
-
-      // Actualizar Firestore solamente en modo automático.
-      if (!modoPrueba) {
-
-        await doc.ref.update({
-          recordatorioEnviado: true,
-        });
-
-        console.log(
-          `Cuota ${doc.id} marcada como enviada.`
-        );
-
-      } else {
-
-        console.log(
-          'Modo de prueba: Firestore no fue modificado.'
-        );
-      }
-
-      enviados++;
-
-    } catch (error) {
-
-      console.error(
-        `Error procesando cuota ${doc.id}:`,
-        error
-      );
-
-      errores++;
-    }
+  if (permitirPrueba && (!resendApiKey || !correoPrueba)) {
+    throw new Error('Falta RESEND_API_KEY o TEST_EMAIL.');
   }
 
-  // Resumen.
-  console.log('==================================');
-  console.log('RESUMEN DEL PROCESO');
-  console.log(`Correos aceptados por Resend: ${enviados}`);
-  console.log(`Cuotas omitidas: ${omitidos}`);
-  console.log(`Errores: ${errores}`);
-  console.log('==================================');
+  const resend = permitirPrueba ? new Resend(resendApiKey) : null;
+
+  for (const doc of snapshot.docs) {
+    const cuota = doc.data();
+
+    if (cuota.recordatorioEnviado === true) {
+      console.log(`Cuota ${doc.id}: ya figura como notificada.`);
+      continue;
+    }
+
+    if (!cuota.idCliente) {
+      console.log(`Cuota ${doc.id}: falta idCliente.`);
+      continue;
+    }
+
+    const clienteDoc = await db
+      .collection('clientes')
+      .doc(cuota.idCliente)
+      .get();
+
+    if (!clienteDoc.exists) {
+      console.log(`Cuota ${doc.id}: cliente no encontrado.`);
+      continue;
+    }
+
+    const cliente = clienteDoc.data();
+    const vencimiento = cuota.fechaVencimiento.toDate();
+    const numeroCuota = cuota.numeroCuota ?? 'No especificado';
+    const valor = Number(cuota.valorCuota);
+
+    const valorTexto = Number.isFinite(valor)
+      ? valor.toLocaleString('es-CO', {
+          style: 'currency',
+          currency: 'COP',
+          maximumFractionDigits: 0,
+        })
+      : 'Consultar en Cobramzas';
+
+    console.log('Cuota preparada:', {
+      idCuota: doc.id,
+      nombre: cliente.nombreCompleto || 'Cliente',
+      correoRegistrado: cliente.correoElectronico ? 'Sí' : 'No',
+      numeroCuota,
+      fechaVencimiento: fechaColombia(vencimiento),
+      valor: valorTexto,
+    });
+
+    // Si no está habilitado el envío, solo simula el proceso.
+    if (!resend) {
+      console.log(
+        'Modo simulación: no se envió correo ni se modificó Firestore.'
+      );
+      continue;
+    }
+
+    if (!cliente.correoElectronico) {
+      console.log(`Cuota ${doc.id}: cliente sin correo registrado.`);
+      continue;
+    }
+
+    // IMPORTANTE: el correo siempre se envía al correo de prueba.
+    // No se envía al correo real del cliente.
+    const { html, text } = crearPlantillaCorreo({
+      nombre: cliente.nombreCompleto || 'cliente',
+      numeroCuota,
+      valorTexto,
+      fechaVencimiento: fechaColombia(vencimiento),
+    });
+
+    const { data, error } = await resend.emails.send({
+      from: 'Cobramzas <onboarding@resend.dev>',
+      to: [correoPrueba],
+      subject: 'Cobramzas | Recordatorio de pago de su cuota',
+      html,
+      text,
+    });
+
+    if (error) {
+      console.error(
+        `Error enviando prueba para cuota ${doc.id}:`,
+        error
+      );
+      continue;
+    }
+
+    console.log(
+      `Resend aceptó la prueba para cuota ${doc.id}. ID: ${data?.id}`
+    );
+  }
+
+  console.log('Proceso finalizado.');
 }
 
-// ==========================================
-// EJECUCIÓN
-// ==========================================
+// ======================================================
+// EJECUCIÓN PRINCIPAL
+// ======================================================
 
-consultarCuotasPendientes()
-  .then(() => {
-    console.log('Proceso de recordatorios finalizado.');
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error('Error en el proceso de recordatorios:', error);
-    process.exit(1);
-  });
+consultarCuotasPendientes().catch((error) => {
+  console.error('Error consultando las cuotas:', error);
+  process.exitCode = 1;
+});
