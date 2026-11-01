@@ -1,5 +1,4 @@
-
-const { initializeApp, cert } = require('firebase-admin/app');
+﻿const { initializeApp, cert } = require('firebase-admin/app');
 const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 const { Resend } = require('resend');
 
@@ -10,17 +9,28 @@ const { Resend } = require('resend');
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
 const resendApiKey = process.env.RESEND_API_KEY;
 const correoPrueba = process.env.TEST_EMAIL;
-const permitirPrueba = process.env.SEND_TEST_EMAIL === 'true';
 
 if (!serviceAccountJson) {
   throw new Error('Falta configurar FIREBASE_SERVICE_ACCOUNT.');
 }
 
+if (!resendApiKey) {
+  throw new Error('Falta configurar RESEND_API_KEY.');
+}
+
+if (!correoPrueba) {
+  throw new Error('Falta configurar TEST_EMAIL.');
+}
+
+// Inicializar Firebase
 initializeApp({
   credential: cert(JSON.parse(serviceAccountJson)),
 });
 
 const db = getFirestore();
+
+// Inicializar Resend directamente, sin modo simulación
+const resend = new Resend(resendApiKey);
 
 // ======================================================
 // FECHAS Y FORMATO COLOMBIA
@@ -87,6 +97,7 @@ function crearPlantillaCorreo({
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recordatorio de pago | Cobramzas</title>
 </head>
+
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">
 
   <div style="display:none;font-size:1px;color:#f1f5f9;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
@@ -95,6 +106,7 @@ function crearPlantillaCorreo({
 
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
     style="background-color:#f1f5f9;padding:30px 12px;">
+
     <tr>
       <td align="center">
 
@@ -106,6 +118,7 @@ function crearPlantillaCorreo({
               <div style="font-size:29px;font-weight:bold;color:#ffffff;letter-spacing:1px;">
                 Cobramzas
               </div>
+
               <div style="font-size:13px;color:#dcfce7;margin-top:8px;">
                 Gestión de créditos y cobranzas
               </div>
@@ -136,6 +149,7 @@ function crearPlantillaCorreo({
 
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
                 style="background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;">
+
                 <tr>
                   <td style="padding:20px;">
 
@@ -148,10 +162,12 @@ function crearPlantillaCorreo({
                     </div>
 
                     <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+
                       <tr>
                         <td style="padding:10px 0;border-top:1px solid #d1fae5;font-size:14px;color:#64748b;">
                           Número de cuota
                         </td>
+
                         <td align="right" style="padding:10px 0;border-top:1px solid #d1fae5;font-size:14px;font-weight:bold;">
                           ${cuotaSegura}
                         </td>
@@ -161,12 +177,13 @@ function crearPlantillaCorreo({
                         <td style="padding:10px 0;border-top:1px solid #d1fae5;font-size:14px;color:#64748b;">
                           Fecha de vencimiento
                         </td>
+
                         <td align="right" style="padding:10px 0;border-top:1px solid #d1fae5;font-size:14px;font-weight:bold;">
                           ${fechaSegura}
                         </td>
                       </tr>
-                    </table>
 
+                    </table>
                   </td>
                 </tr>
               </table>
@@ -202,6 +219,7 @@ function crearPlantillaCorreo({
 
       </td>
     </tr>
+
   </table>
 
 </body>
@@ -230,7 +248,7 @@ function crearPlantillaCorreo({
 }
 
 // ======================================================
-// CONSULTAR CUOTAS PENDIENTES
+// CONSULTAR CUOTAS PENDIENTES Y ENVIAR CORREOS
 // ======================================================
 
 async function consultarCuotasPendientes() {
@@ -251,12 +269,6 @@ async function consultarCuotasPendientes() {
     .get();
 
   console.log(`Cuotas encontradas: ${snapshot.size}`);
-
-  if (permitirPrueba && (!resendApiKey || !correoPrueba)) {
-    throw new Error('Falta RESEND_API_KEY o TEST_EMAIL.');
-  }
-
-  const resend = permitirPrueba ? new Resend(resendApiKey) : null;
 
   for (const doc of snapshot.docs) {
     const cuota = doc.data();
@@ -282,6 +294,12 @@ async function consultarCuotasPendientes() {
     }
 
     const cliente = clienteDoc.data();
+
+    if (!cliente.correoElectronico) {
+      console.log(`Cuota ${doc.id}: cliente sin correo registrado.`);
+      continue;
+    }
+
     const vencimiento = cuota.fechaVencimiento.toDate();
     const numeroCuota = cuota.numeroCuota ?? 'No especificado';
     const valor = Number(cuota.valorCuota);
@@ -297,26 +315,13 @@ async function consultarCuotasPendientes() {
     console.log('Cuota preparada:', {
       idCuota: doc.id,
       nombre: cliente.nombreCompleto || 'Cliente',
-      correoRegistrado: cliente.correoElectronico ? 'Sí' : 'No',
+      correoRegistrado: 'Sí',
       numeroCuota,
       fechaVencimiento: fechaColombia(vencimiento),
       valor: valorTexto,
     });
 
-    // Si no está habilitado el envío, solo simula el proceso.
-    if (!resend) {
-      console.log(
-        'Modo simulación: no se envió correo ni se modificó Firestore.'
-      );
-      continue;
-    }
-
-    if (!cliente.correoElectronico) {
-      console.log(`Cuota ${doc.id}: cliente sin correo registrado.`);
-      continue;
-    }
-
-    // IMPORTANTE: el correo siempre se envía al correo de prueba.
+    // El correo se envía únicamente al correo de prueba.
     // No se envía al correo real del cliente.
     const { html, text } = crearPlantillaCorreo({
       nombre: cliente.nombreCompleto || 'cliente',
@@ -324,6 +329,8 @@ async function consultarCuotasPendientes() {
       valorTexto,
       fechaVencimiento: fechaColombia(vencimiento),
     });
+
+    console.log(`Enviando correo de prueba para cuota ${doc.id}...`);
 
     const { data, error } = await resend.emails.send({
       from: 'Cobramzas <onboarding@resend.dev>',
@@ -335,14 +342,14 @@ async function consultarCuotasPendientes() {
 
     if (error) {
       console.error(
-        `Error enviando prueba para cuota ${doc.id}:`,
+        `Error enviando correo para cuota ${doc.id}:`,
         error
       );
       continue;
     }
 
     console.log(
-      `Resend aceptó la prueba para cuota ${doc.id}. ID: ${data?.id}`
+      `Correo aceptado por Resend para cuota ${doc.id}. ID: ${data?.id}`
     );
   }
 
@@ -354,6 +361,6 @@ async function consultarCuotasPendientes() {
 // ======================================================
 
 consultarCuotasPendientes().catch((error) => {
-  console.error('Error consultando las cuotas:', error);
+  console.error('Error en el proceso de recordatorios:', error);
   process.exitCode = 1;
 });
