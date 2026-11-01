@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-<<<<<<< HEAD
 class PerfilUsuario extends StatefulWidget {
   final String userId;
 
@@ -23,14 +22,14 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
   Future<Map<String, dynamic>?> obtenerPerfil() async {
     final usuariosRef = FirebaseFirestore.instance.collection('usuarios');
 
-    // Primera búsqueda: comprobar si el UID es el ID del documento.
+    // Primera búsqueda: ID del documento.
     final documento = await usuariosRef.doc(widget.userId).get();
 
     if (documento.exists) {
       return documento.data();
     }
 
-    // Segunda búsqueda: buscar por el campo uid.
+    // Segunda búsqueda: campo uid.
     final resultadoUid =
         await usuariosRef.where('uid', isEqualTo: widget.userId).limit(1).get();
 
@@ -38,7 +37,7 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
       return resultadoUid.docs.first.data();
     }
 
-    // Tercera búsqueda: compatibilidad con el campo userId.
+    // Tercera búsqueda: campo userId.
     final resultadoUserId =
         await usuariosRef
             .where('userId', isEqualTo: widget.userId)
@@ -63,15 +62,6 @@ class _PerfilUsuarioState extends State<PerfilUsuario> {
 
     return 'No registrado';
   }
-=======
-class PerfilUsuario extends StatelessWidget {
-  final String userId; // Recibe el userId
-
-  const PerfilUsuario({
-    super.key,
-    required this.userId,
-  }); // constructor recibe userId
->>>>>>> origin/main
 
   @override
   Widget build(BuildContext context) {
@@ -84,42 +74,25 @@ class PerfilUsuario extends StatelessWidget {
         centerTitle: true,
         elevation: 2,
       ),
-<<<<<<< HEAD
       body: FutureBuilder<Map<String, dynamic>?>(
         future: perfilFuture,
-=======
-
-      body: FutureBuilder<DocumentSnapshot>(
-        future:
-            FirebaseFirestore.instance
-                .collection('usuarios')
-                .doc(userId) // usar userId recibido
-                .get(),
->>>>>>> origin/main
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-<<<<<<< HEAD
 
           if (snapshot.hasError) {
             return const Center(child: Text('Error al consultar el perfil'));
           }
 
           if (!snapshot.hasData || snapshot.data == null) {
-=======
-          if (!snapshot.hasData || !snapshot.data!.exists) {
->>>>>>> origin/main
             return const Center(child: Text('Usuario no encontrado'));
           }
 
           final usuario = snapshot.data!;
 
-<<<<<<< HEAD
           final nombre = obtenerValor(usuario, ['nombreCompleto', 'nombre']);
 
-=======
->>>>>>> origin/main
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -132,12 +105,8 @@ class PerfilUsuario extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-<<<<<<< HEAD
                   nombre,
                   textAlign: TextAlign.center,
-=======
-                  usuario['nombre'],
->>>>>>> origin/main
                   style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
@@ -148,38 +117,22 @@ class PerfilUsuario extends StatelessWidget {
                 InfoRow(
                   icon: Icons.badge,
                   label: 'Cédula',
-<<<<<<< HEAD
                   value: obtenerValor(usuario, ['cedula']),
-=======
-                  value: usuario['cedula'],
->>>>>>> origin/main
                 ),
                 InfoRow(
                   icon: Icons.email,
                   label: 'Email',
-<<<<<<< HEAD
                   value: obtenerValor(usuario, ['email', 'correo']),
-=======
-                  value: usuario['email'],
->>>>>>> origin/main
                 ),
                 InfoRow(
                   icon: Icons.phone,
                   label: 'Teléfono',
-<<<<<<< HEAD
                   value: obtenerValor(usuario, ['telefono']),
-=======
-                  value: usuario['telefono'],
->>>>>>> origin/main
                 ),
                 InfoRow(
                   icon: Icons.security,
                   label: 'Rol',
-<<<<<<< HEAD
                   value: obtenerValor(usuario, ['rol']),
-=======
-                  value: usuario['rol'],
->>>>>>> origin/main
                 ),
               ],
             ),

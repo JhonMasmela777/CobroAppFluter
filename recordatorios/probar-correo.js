@@ -10,7 +10,7 @@ async function probarCorreo() {
   const resend = new Resend(apiKey);
 
   const { data, error } = await resend.emails.send({
-    from: 'Cobramzas <onboarding@resend.dev>',
+    from: 'Cobra Tech <onboarding@resend.dev>',
     to: ['jonathancoloradomasmela@gmail.com'],
     subject: 'Prueba de correo - Cobramzas',
     text: [

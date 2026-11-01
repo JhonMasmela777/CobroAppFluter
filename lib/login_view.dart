@@ -20,6 +20,7 @@ class _LoginViewState extends State<LoginView> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   bool _cargando = false;
+  bool _enviandoCorreo = false;
 
   Future<void> login() async {
     if (_cargando) return;
@@ -37,10 +38,7 @@ class _LoginViewState extends State<LoginView> {
     });
 
     try {
-      // Verificar el proyecto Firebase utilizado por la aplicación.
       debugPrint('PROYECTO FIREBASE: ${_firestore.app.options.projectId}');
-
-      // PASO 1: Autenticar al usuario.
       debugPrint('LOGIN 1: Intentando autenticar...');
 
       final UserCredential credential = await _auth.signInWithEmailAndPassword(
@@ -66,7 +64,6 @@ class _LoginViewState extends State<LoginView> {
       debugPrint('UID AUTH: [$uidAuth]');
       debugPrint('EMAIL AUTH: [$emailAuth]');
 
-      // PASO 2: Buscar el perfil por UID.
       debugPrint('LOGIN 3: Buscando perfil por UID...');
 
       QuerySnapshot<Map<String, dynamic>> snapshot =
@@ -78,7 +75,6 @@ class _LoginViewState extends State<LoginView> {
 
       debugPrint('DOCUMENTOS POR UID: ${snapshot.docs.length}');
 
-      // PASO 3: Si no aparece, buscar por el campo "correo".
       if (snapshot.docs.isEmpty) {
         debugPrint('Intentando búsqueda por correo...');
 
@@ -92,7 +88,6 @@ class _LoginViewState extends State<LoginView> {
         debugPrint('DOCUMENTOS POR CORREO: ${snapshot.docs.length}');
       }
 
-      // PASO 4: Como alternativa, buscar por el campo "email".
       if (snapshot.docs.isEmpty) {
         debugPrint('Intentando búsqueda por email...');
 
@@ -106,7 +101,6 @@ class _LoginViewState extends State<LoginView> {
         debugPrint('DOCUMENTOS POR EMAIL: ${snapshot.docs.length}');
       }
 
-      // PASO 5: Verificar que el perfil exista.
       if (snapshot.docs.isEmpty) {
         debugPrint('No se encontró el perfil en la colección usuarios.');
 
@@ -121,16 +115,12 @@ class _LoginViewState extends State<LoginView> {
         return;
       }
 
-      // PASO 6: Leer el perfil y el rol.
-      // PASO 6: Leer el perfil y el rol.
       final userDoc = snapshot.docs.first;
       final userData = userDoc.data();
 
-      // UID registrado dentro del perfil de Firestore.
       final String uidPerfil =
           (userData['uid'] ?? userData['userId'] ?? '').toString().trim();
 
-      // Verificar que el perfil corresponde a la cuenta autenticada.
       debugPrint('ID DOCUMENTO FIRESTORE: ${userDoc.id}');
       debugPrint('UID AUTHENTICATION: $uidAuth');
       debugPrint('UID DEL PERFIL: $uidPerfil');
@@ -145,10 +135,8 @@ class _LoginViewState extends State<LoginView> {
         );
       }
 
-      // Este es el identificador que recibirán las demás pantallas.
       final String userId = uidAuth;
 
-      // Obtener el rol.
       final String rol =
           (userData['rol'] ?? '').toString().trim().toLowerCase();
 
@@ -163,7 +151,6 @@ class _LoginViewState extends State<LoginView> {
 
       if (!mounted) return;
 
-      // PASO 7: Redirigir según el rol.
       if (rol == 'administrador') {
         Navigator.pushReplacement(
           context,
@@ -235,6 +222,73 @@ class _LoginViewState extends State<LoginView> {
       if (mounted) {
         setState(() {
           _cargando = false;
+        });
+      }
+    }
+  }
+
+  // RESTABLECER CONTRASEÑA MEDIANTE FIREBASE AUTHENTICATION.
+  Future<void> restablecerContrasena() async {
+    final String email = emailController.text.trim();
+
+    if (email.isEmpty) {
+      showError('Ingresa tu correo electrónico para continuar.');
+      return;
+    }
+
+    if (_enviandoCorreo) return;
+
+    setState(() {
+      _enviandoCorreo = true;
+    });
+
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+
+      if (!mounted) return;
+
+      showError(
+        'Si la cuenta está registrada, recibirás un correo '
+        'con las instrucciones para restablecer tu contraseña.',
+      );
+    } on FirebaseAuthException catch (e) {
+      debugPrint('ERROR RECUPERACIÓN: ${e.code}');
+      debugPrint('DETALLE: ${e.message}');
+
+      if (!mounted) return;
+
+      switch (e.code) {
+        case 'invalid-email':
+          showError('El correo electrónico no es válido.');
+          break;
+
+        case 'too-many-requests':
+          showError('Demasiados intentos. Intenta nuevamente más tarde.');
+          break;
+
+        case 'network-request-failed':
+          showError('No hay conexión a internet. Verifica tu conexión.');
+          break;
+
+        case 'operation-not-allowed':
+          showError(
+            'El restablecimiento de contraseña no está habilitado en Firebase.',
+          );
+          break;
+
+        default:
+          showError('No se pudo procesar la solicitud. Intenta nuevamente.');
+      }
+    } catch (e) {
+      debugPrint('ERROR INESPERADO RECUPERACIÓN: $e');
+
+      if (mounted) {
+        showError('Ocurrió un error al solicitar el restablecimiento.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _enviandoCorreo = false;
         });
       }
     }
@@ -324,7 +378,24 @@ class _LoginViewState extends State<LoginView> {
                 },
               ),
 
-              const SizedBox(height: 30),
+              // OPCIÓN PARA RECUPERAR CONTRASEÑA.
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _enviandoCorreo ? null : restablecerContrasena,
+                  child: Text(
+                    _enviandoCorreo
+                        ? 'Enviando correo...'
+                        : '¿Olvidaste tu contraseña?',
+                    style: const TextStyle(
+                      color: Colors.teal,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
 
               SizedBox(
                 width: double.infinity,
