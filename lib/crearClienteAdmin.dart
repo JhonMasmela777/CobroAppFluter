@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cobro_app_flutter/crearCreditoAdmin.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:cobro_app_flutter/seleccionarUbicacion.dart';
 
 class CrearClienteAdmin extends StatefulWidget {
   final String adminId;
@@ -20,11 +22,32 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
       TextEditingController();
   final TextEditingController _direccionViviendaController =
       TextEditingController();
+
   final TextEditingController _nombreCompletoController =
       TextEditingController();
   final TextEditingController _numeroCelularController =
       TextEditingController();
   final TextEditingController _referenciaController = TextEditingController();
+
+  final TextEditingController _barrioController = TextEditingController();
+
+  double? _latitud;
+  double? _longitud;
+  bool _ubicacionVerificada = false;
+  Future<void> _abrirSelectorUbicacion() async {
+    final LatLng? ubicacion = await Navigator.push<LatLng>(
+      context,
+      MaterialPageRoute(builder: (context) => const SeleccionarUbicacion()),
+    );
+
+    if (!mounted || ubicacion == null) return;
+
+    setState(() {
+      _latitud = ubicacion.latitude;
+      _longitud = ubicacion.longitude;
+      _ubicacionVerificada = true;
+    });
+  }
 
   Future<void> _crearCliente() async {
     if (_formKey.currentState!.validate()) {
@@ -44,7 +67,17 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
           'nombreCompleto': _nombreCompletoController.text.trim(),
           'numeroCelular': _numeroCelularController.text.trim(),
           'referencia': _referenciaController.text.trim(),
+          'barrio': _barrioController.text.trim(),
+          'latitud': _latitud,
+          'longitud': _longitud,
+          'ubicacionVerificada': _ubicacionVerificada,
         });
+        // Limpiar los campos de ubicación
+        _barrioController.clear();
+
+        _latitud = null;
+        _longitud = null;
+        _ubicacionVerificada = false;
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -130,7 +163,33 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
                 'Dirección de Vivienda',
                 _direccionViviendaController,
               ),
+              _campoTexto('Barrio', _barrioController),
               _campoTexto('Referencia', _referenciaController),
+              const SizedBox(height: 12),
+
+              ElevatedButton.icon(
+                onPressed: _abrirSelectorUbicacion,
+                icon: const Icon(Icons.map),
+                label: const Text('Ubicar vivienda en el mapa'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00C290),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                _ubicacionVerificada
+                    ? 'Ubicación seleccionada correctamente'
+                    : 'Ubicación pendiente de confirmar',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: _ubicacionVerificada ? Colors.green : Colors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               SizedBox(height: 20),
               Center(
                 child: ElevatedButton(

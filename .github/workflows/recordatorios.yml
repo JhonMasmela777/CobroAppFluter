@@ -1,4 +1,4 @@
-﻿name: Recordatorios automaticos Cobra Tech 
+name: Recordatorios automaticos Cobra Tech 
 
 on:
   workflow_dispatch:

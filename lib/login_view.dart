@@ -326,7 +326,7 @@ class _LoginViewState extends State<LoginView> {
               const SizedBox(height: 30),
 
               const Text(
-                'Cobramzas',
+                'Cobra Tech',
                 style: TextStyle(
                   fontSize: 30,
                   color: Colors.teal,

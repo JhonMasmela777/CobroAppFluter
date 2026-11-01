@@ -35,7 +35,11 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
           snapshot.docs
               .map((doc) {
                 final data = doc.data() as Map<String, dynamic>;
-                final userId = data['userId']?.toString() ?? '';
+
+                // El identificador principal del usuario es uid.
+                // userId queda como alternativa para registros antiguos.
+                final userId =
+                    data['uid']?.toString() ?? data['userId']?.toString() ?? '';
 
                 return {...data, 'id': userId};
               })
@@ -51,9 +55,11 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
         cargandoCobradores = false;
       });
 
+      debugPrint('TOTAL DE USUARIOS ENCONTRADOS: ${snapshot.docs.length}');
       debugPrint('COBRADORES CARGADOS: ${cobradores.length}');
+
       for (final cobrador in cobradores) {
-        debugPrint('Nombre: ${cobrador['nombre']} | userId: ${cobrador['id']}');
+        debugPrint('Nombre: ${cobrador['nombre']} | UID: ${cobrador['id']}');
       }
     } catch (e) {
       if (!mounted) return;
@@ -61,6 +67,8 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
       setState(() {
         cargandoCobradores = false;
       });
+
+      debugPrint('ERROR CARGANDO COBRADORES: $e');
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
