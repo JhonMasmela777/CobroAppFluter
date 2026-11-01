@@ -1,5 +1,5 @@
-﻿
-name: Recordatorios automaticos CobraTech
+
+name: Recordatorios automaticos Cobramzas
 
 on:
   workflow_dispatch:
@@ -30,5 +30,4 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           TEST_EMAIL: jonathancoloradomasmela@gmail.com
-          SEND_TEST_EMAIL: jonathancoloradomasmela@gmail.com
-
+          SEND_TEST_EMAIL: 'true'
