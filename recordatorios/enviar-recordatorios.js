@@ -95,7 +95,7 @@ function crearPlantillaCorreo({
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recordatorio de pago | Cobramzas</title>
+  <title>Recordatorio de pago | Cobra Tech</title>
 </head>
 
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">
@@ -116,7 +116,7 @@ function crearPlantillaCorreo({
           <tr>
             <td style="background-color:#166534;padding:28px 30px;text-align:center;">
               <div style="font-size:29px;font-weight:bold;color:#ffffff;letter-spacing:1px;">
-                Cobramzas
+                Cobra Tech
               </div>
 
               <div style="font-size:13px;color:#dcfce7;margin-top:8px;">
@@ -137,7 +137,7 @@ function crearPlantillaCorreo({
               </p>
 
               <p style="font-size:15px;line-height:1.7;margin:0 0 14px;">
-                Reciba un cordial saludo de parte de Cobramzas.
+                Reciba un cordial saludo de parte de Cobra Tech.
                 Nos permitimos recordarle amablemente que su cuota
                 tiene una fecha de vencimiento próxima. Le invitamos
                 a ponerse al día con su obligación en la fecha establecida.
@@ -200,7 +200,7 @@ function crearPlantillaCorreo({
 
               <p style="font-size:14px;line-height:1.7;margin:22px 0 0;">
                 Cordialmente,<br>
-                <strong style="color:#166534;">Equipo de Cobramzas</strong>
+                <strong style="color:#166534;">Equipo de Cobra Tech</strong>
               </p>
 
             </td>
@@ -209,7 +209,7 @@ function crearPlantillaCorreo({
           <tr>
             <td style="background-color:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 25px;text-align:center;">
               <p style="font-size:12px;line-height:1.6;color:#64748b;margin:0;">
-                Mensaje generado por el sistema de gestión de créditos y cobranzas Cobramzas.
+                Mensaje generado por el sistema de gestión de créditos y cobranzas Cobra Tech.
                 <br>Correo de demostración académica.
               </p>
             </td>
@@ -228,7 +228,7 @@ function crearPlantillaCorreo({
   const text = [
     `Apreciado cliente ${nombre || 'cliente'}:`,
     '',
-    'Reciba un cordial saludo de parte de Cobramzas.',
+    'Reciba un cordial saludo de parte de Cobra Tech.',
     'Le recordamos amablemente la próxima fecha de vencimiento de su cuota.',
     'Le invitamos a ponerse al día con su obligación en la fecha establecida.',
     '',
@@ -239,7 +239,7 @@ function crearPlantillaCorreo({
     'Si ya realizó el pago, puede hacer caso omiso a este recordatorio.',
     '',
     'Cordialmente,',
-    'Equipo de Cobramzas',
+    'Equipo de Cobra Tech',
     '',
     'Correo de demostración académica.',
   ].join('\n');
@@ -310,7 +310,7 @@ async function consultarCuotasPendientes() {
           currency: 'COP',
           maximumFractionDigits: 0,
         })
-      : 'Consultar en Cobramzas';
+      : 'Consultar en Cobra Tech';
 
     console.log('Cuota preparada:', {
       idCuota: doc.id,
@@ -333,9 +333,9 @@ async function consultarCuotasPendientes() {
     console.log(`Enviando correo de prueba para cuota ${doc.id}...`);
 
     const { data, error } = await resend.emails.send({
-      from: 'Cobramzas <onboarding@resend.dev>',
+      from: 'Cobra Tech <onboarding@resend.dev>',
       to: [correoPrueba],
-      subject: 'Cobramzas | Recordatorio de pago de su cuota',
+      subject: 'Cobra Tech | Recordatorio de pago de su cuota',
       html,
       text,
     });
