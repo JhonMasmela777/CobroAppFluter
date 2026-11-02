@@ -150,23 +150,39 @@ class _MenuUsuarioState extends State<MenuUsuario> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFDFFFEF),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF00C290),
-        automaticallyImplyLeading: false,
-        centerTitle: true,
-        title: Text(
-          nombre.isNotEmpty ? 'Hola, $nombre' : 'Hola, Bienvenido De Nuevo.',
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-            fontSize: 20,
-          ),
-        ),
-      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.only(top: 60, bottom: 20),
+              color: const Color(0xFF00C290),
+              child: Center(
+                child: Column(
+                  children: [
+                    Text(
+                      nombre.isNotEmpty
+                          ? '¡Hola, $nombre!'
+                          : '¡Hola, bienvenido de nuevo!',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Bienvenido a Cobra Tech',
+                      style: TextStyle(color: Colors.black54, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
             const SizedBox(height: 20),
+
             buildBoton(context, Icons.calendar_today, 'Cobros Del Día'),
             buildBoton(context, Icons.history, 'Historial De Pagos'),
             buildBoton(context, Icons.notifications, 'Notificaciones'),

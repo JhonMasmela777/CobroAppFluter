@@ -1,5 +1,9 @@
 const { initializeApp, cert } = require('firebase-admin/app');
-const { getFirestore, Timestamp } = require('firebase-admin/firestore');
+const {
+  getFirestore,
+  Timestamp,
+  FieldValue,
+} = require('firebase-admin/firestore');
 const { Resend } = require('resend');
 
 // ======================================================
@@ -341,12 +345,58 @@ async function consultarCuotasPendientes() {
     });
 
     if (error) {
-      console.error(
-        `Error enviando correo para cuota ${doc.id}:`,
-        error
-      );
-      continue;
-    }
+  console.error(
+    `Error enviando correo para cuota ${doc.id}:`,
+    error
+  );
+  continue;
+}
+
+console.log(
+  `Correo aceptado por Resend para cuota ${doc.id}. ID: ${data?.id}`
+);
+
+// ======================================================
+// REGISTRAR ENVÍO EXITOSO EN FIRESTORE
+// ======================================================
+
+try {
+  await db.collection('recordatoriosEnviados').add({
+    clienteNombre: cliente.nombreCompleto || 'Cliente',
+
+    // Correo al que realmente se envió el mensaje.
+    correoElectronico: correoPrueba,
+
+    // Correo registrado originalmente para el cliente.
+    correoCliente: cliente.correoElectronico,
+
+    fechaEnvio: FieldValue.serverTimestamp(),
+
+    fechaVencimiento: Timestamp.fromDate(vencimiento),
+
+    estado: 'Enviado',
+
+    valor: Number.isFinite(valor) ? valor : null,
+
+    cuotaId: doc.id,
+
+    numeroCuota: numeroCuota,
+
+    resendId: data?.id || null,
+
+    esPrueba: true,
+  });
+
+  console.log(
+    `Historial registrado correctamente para la cuota ${doc.id}.`
+  );
+
+} catch (errorRegistro) {
+  console.error(
+    `El correo se envió, pero no se pudo registrar el historial de la cuota ${doc.id}:`,
+    errorRegistro
+  );
+}
 
     console.log(
       `Correo aceptado por Resend para cuota ${doc.id}. ID: ${data?.id}`

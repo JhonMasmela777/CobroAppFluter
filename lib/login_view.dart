@@ -21,6 +21,7 @@ class _LoginViewState extends State<LoginView> {
 
   bool _cargando = false;
   bool _enviandoCorreo = false;
+  bool _mostrarContrasena = false;
 
   Future<void> login() async {
     if (_cargando) return;
@@ -363,10 +364,28 @@ class _LoginViewState extends State<LoginView> {
 
               TextField(
                 controller: passwordController,
-                obscureText: true,
+                obscureText: !_mostrarContrasena,
+                autocorrect: false,
+                enableSuggestions: false,
                 decoration: InputDecoration(
                   labelText: 'Contraseña',
                   prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    tooltip:
+                        _mostrarContrasena
+                            ? 'Ocultar contraseña'
+                            : 'Mostrar contraseña',
+                    icon: Icon(
+                      _mostrarContrasena
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _mostrarContrasena = !_mostrarContrasena;
+                      });
+                    },
+                  ),
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(

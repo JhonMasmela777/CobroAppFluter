@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cobro_app_flutter/crearCreditoAdmin.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cobro_app_flutter/seleccionarUbicacion.dart';
+import 'package:flutter/services.dart';
 
 class CrearClienteAdmin extends StatefulWidget {
   final String adminId;
@@ -50,78 +51,101 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
   }
 
   Future<void> _crearCliente() async {
-    if (_formKey.currentState!.validate()) {
-      try {
-        final cedula = _cedulaController.text.trim();
-
-        // Ya no se busca si existe por cedula
-        // El id se genera automáticamente con doc()
-
-        final docRef = FirebaseFirestore.instance.collection('clientes').doc();
-        await docRef.set({
-          'uid': docRef.id,
-          'cedula': cedula,
-          'correoElectronico': _correoController.text.trim(),
-          'direccionTrabajo': _direccionTrabajoController.text.trim(),
-          'direccionVivienda': _direccionViviendaController.text.trim(),
-          'nombreCompleto': _nombreCompletoController.text.trim(),
-          'numeroCelular': _numeroCelularController.text.trim(),
-          'referencia': _referenciaController.text.trim(),
-          'barrio': _barrioController.text.trim(),
-          'latitud': _latitud,
-          'longitud': _longitud,
-          'ubicacionVerificada': _ubicacionVerificada,
-        });
-        // Limpiar los campos de ubicación
-        _barrioController.clear();
-
-        _latitud = null;
-        _longitud = null;
-        _ubicacionVerificada = false;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.green,
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 10),
-                Text('Usuario creado exitosamente'),
-              ],
-            ),
+    // VALIDAR QUE LA VIVIENDA ESTÉ UBICADA EN EL MAPA
+    if (!_ubicacionVerificada || _latitud == null || _longitud == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              Icon(Icons.location_off, color: Colors.white),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Debes ubicar y confirmar la vivienda en el mapa antes de crear el crédito.',
+                ),
+              ),
+            ],
           ),
-        );
+        ),
+      );
+      return;
+    }
 
-        _formKey.currentState!.reset();
-        _cedulaController.clear();
-        _correoController.clear();
-        _direccionTrabajoController.clear();
-        _direccionViviendaController.clear();
-        _nombreCompletoController.clear();
-        _numeroCelularController.clear();
-        _referenciaController.clear();
+    // VALIDAR LOS DEMÁS CAMPOS DEL FORMULARIO
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-        // Ahora pasamos docRef.id (uid) en vez de cedula
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CrearCreditoAdmin(clienteId: docRef.id),
+    try {
+      final cedula = _cedulaController.text.trim();
+
+      final docRef = FirebaseFirestore.instance.collection('clientes').doc();
+
+      await docRef.set({
+        'uid': docRef.id,
+        'cedula': cedula,
+        'correoElectronico': _correoController.text.trim(),
+        'direccionTrabajo': _direccionTrabajoController.text.trim(),
+        'direccionVivienda': _direccionViviendaController.text.trim(),
+        'nombreCompleto': _nombreCompletoController.text.trim(),
+        'numeroCelular': _numeroCelularController.text.trim(),
+        'referencia': _referenciaController.text.trim(),
+        'barrio': _barrioController.text.trim(),
+        'latitud': _latitud,
+        'longitud': _longitud,
+        'ubicacionVerificada': _ubicacionVerificada,
+      });
+
+      // LIMPIAR LOS CAMPOS DE UBICACIÓN
+      _barrioController.clear();
+
+      _latitud = null;
+      _longitud = null;
+      _ubicacionVerificada = false;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.green,
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text('Cliente creado exitosamente'),
+            ],
           ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red,
-            content: Row(
-              children: [
-                Icon(Icons.error, color: Colors.white),
-                SizedBox(width: 10),
-                Expanded(child: Text('Error al crear usuario: $e')),
-              ],
-            ),
+        ),
+      );
+
+      _formKey.currentState!.reset();
+      _cedulaController.clear();
+      _correoController.clear();
+      _direccionTrabajoController.clear();
+      _direccionViviendaController.clear();
+      _nombreCompletoController.clear();
+      _numeroCelularController.clear();
+      _referenciaController.clear();
+
+      // NAVEGAR A CREAR CRÉDITO
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CrearCreditoAdmin(clienteId: docRef.id),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              const Icon(Icons.error, color: Colors.white),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Error al crear cliente: $e')),
+            ],
           ),
-        );
-      }
+        ),
+      );
     }
   }
 
@@ -219,21 +243,120 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
     TextEditingController controller, {
     TextInputType tipo = TextInputType.text,
   }) {
+    final bool esNombre = label == 'Nombre Completo';
+    final bool esCedula = label == 'Cédula';
+    final bool esTelefono = label == 'Teléfono';
+    final bool esDireccion =
+        label == 'Dirección de Trabajo' || label == 'Dirección de Vivienda';
+    final bool esReferencia = label == 'Referencia';
+    final bool esCorreo = label == 'Correo Electrónico';
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
         controller: controller,
-        keyboardType: tipo,
+
+        keyboardType:
+            esNombre || esReferencia
+                ? TextInputType.name
+                : esCedula || esTelefono
+                ? TextInputType.number
+                : esCorreo
+                ? TextInputType.emailAddress
+                : tipo,
+
+        textCapitalization:
+            esNombre || esReferencia || esDireccion
+                ? TextCapitalization.words
+                : TextCapitalization.none,
+
+        inputFormatters: [
+          if (esNombre || esReferencia)
+            FilteringTextInputFormatter.allow(
+              RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]'),
+            ),
+
+          if (esCedula || esTelefono) FilteringTextInputFormatter.digitsOnly,
+
+          if (esTelefono) LengthLimitingTextInputFormatter(10),
+
+          if (esDireccion)
+            FilteringTextInputFormatter.allow(
+              RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s#./,\-]'),
+            ),
+        ],
+
+        maxLength: esTelefono ? 10 : null,
+
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          counterText: esTelefono ? '' : null,
         ),
+
         validator: (value) {
-          if (value == null || value.isEmpty) {
+          if (value == null || value.trim().isEmpty) {
             return 'Este campo es obligatorio';
           }
+
+          final texto = value.trim();
+
+          // VALIDACIÓN DEL NOMBRE COMPLETO
+          if (esNombre) {
+            if (texto.length < 3) {
+              return 'Ingresa un nombre válido';
+            }
+
+            if (!RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$').hasMatch(texto)) {
+              return 'Solo se permiten letras y espacios';
+            }
+          }
+
+          // VALIDACIÓN DE LA REFERENCIA
+          if (esReferencia) {
+            if (!RegExp(
+              r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+(?:\s+[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+)+$',
+            ).hasMatch(texto)) {
+              return 'Ingresa nombre y apellido de la referencia';
+            }
+          }
+
+          // VALIDACIÓN DE CÉDULA
+          if (esCedula) {
+            if (!RegExp(r'^[0-9]+$').hasMatch(texto)) {
+              return 'La cédula solo debe contener números';
+            }
+          }
+
+          // VALIDACIÓN DE TELÉFONO
+          if (esTelefono) {
+            if (!RegExp(r'^[0-9]{10}$').hasMatch(texto)) {
+              return 'El teléfono debe tener exactamente 10 dígitos';
+            }
+          }
+
+          // VALIDACIÓN DE CORREO
+          if (esCorreo) {
+            if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(texto)) {
+              return 'Ingresa un correo electrónico válido';
+            }
+          }
+
+          // VALIDACIÓN DE DIRECCIONES
+          if (esDireccion) {
+            final tieneNumero = RegExp(r'[0-9]').hasMatch(texto);
+
+            final tieneLetra = RegExp(
+              r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]',
+            ).hasMatch(texto);
+
+            if (texto.length < 7 || !tieneNumero || !tieneLetra) {
+              return 'Ingresa una dirección completa con letras y números';
+            }
+          }
+
           return null;
         },
       ),

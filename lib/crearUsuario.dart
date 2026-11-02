@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 
 class CrearUsuario extends StatefulWidget {
   final String adminId;
@@ -28,6 +29,8 @@ class _CrearUsuarioState extends State<CrearUsuario> {
 
   String _rolSeleccionado = 'usuario';
   bool _cargando = false;
+  bool _ocultarContrasena = true;
+  bool _ocultarConfirmarContrasena = true;
 
   Future<void> _crearUsuario() async {
     if (_cargando) return;
@@ -74,7 +77,7 @@ class _CrearUsuarioState extends State<CrearUsuario> {
       docRef = FirebaseFirestore.instance.collection('usuarios').doc();
 
       await docRef.set({
-        'userid': uidAuth,
+        'uid': uidAuth,
         'nombre': _nombreController.text.trim(),
         'cedula': _cedulaController.text.trim(),
         'email': _emailController.text.trim(),
@@ -283,31 +286,96 @@ class _CrearUsuarioState extends State<CrearUsuario> {
     bool confirmarContrasena = false,
     TextInputType tipo = TextInputType.text,
   }) {
+    final bool esNombre = label == 'Nombre Completo';
+    final bool esCedula = label == 'Cédula';
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
         controller: controller,
-        obscureText: esPassword,
-        keyboardType: tipo,
+
+        obscureText:
+            esPassword
+                ? (confirmarContrasena
+                    ? _ocultarConfirmarContrasena
+                    : _ocultarContrasena)
+                : false,
+
+        keyboardType:
+            esNombre
+                ? TextInputType.name
+                : esCedula
+                ? TextInputType.number
+                : tipo,
+
+        textCapitalization:
+            esNombre ? TextCapitalization.words : TextCapitalization.none,
+
+        inputFormatters: [
+          if (esNombre)
+            FilteringTextInputFormatter.allow(
+              RegExp(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]'),
+            ),
+          if (esCedula) FilteringTextInputFormatter.digitsOnly,
+        ],
+
         enabled: !_cargando,
+
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+
+          suffixIcon:
+              esPassword
+                  ? IconButton(
+                    icon: Icon(
+                      (confirmarContrasena
+                              ? _ocultarConfirmarContrasena
+                              : _ocultarContrasena)
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: const Color(0xFF00C290),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        if (confirmarContrasena) {
+                          _ocultarConfirmarContrasena =
+                              !_ocultarConfirmarContrasena;
+                        } else {
+                          _ocultarContrasena = !_ocultarContrasena;
+                        }
+                      });
+                    },
+                  )
+                  : null,
         ),
+
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
             return 'Este campo es obligatorio.';
           }
 
+          if (esNombre) {
+            if (value.trim().length < 3) {
+              return 'Ingresa un nombre válido.';
+            }
+
+            if (!RegExp(
+              r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$',
+            ).hasMatch(value.trim())) {
+              return 'El nombre solo debe contener letras.';
+            }
+          }
+
+          if (esCedula && !RegExp(r'^[0-9]+$').hasMatch(value.trim())) {
+            return 'La cédula solo debe contener números.';
+          }
+
           if (label == 'Correo electrónico' &&
               !RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim())) {
             return 'Ingresa un correo válido.';
-          }
-
-          if (label == 'Nombre Completo' && value.trim().length < 3) {
-            return 'Ingresa un nombre válido.';
           }
 
           if (label == 'Contraseña' && value.length < 6) {

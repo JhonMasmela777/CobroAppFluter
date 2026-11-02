@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 
 class CrearCreditoAdmin extends StatefulWidget {
   final String clienteId;
@@ -79,18 +80,24 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
       return;
     }
 
-    final deuda = double.tryParse(_deudaController.text.trim());
+    // Quitamos los puntos de miles antes de convertir el valor.
+    final deudaTexto = _deudaController.text.replaceAll('.', '');
+    final deuda = int.tryParse(deudaTexto);
 
     final numeroCuotas = int.tryParse(_numeroCuotasController.text.trim());
 
     if (deuda == null ||
-        deuda <= 0 ||
+        deuda < 100000 ||
+        deuda > 1000000 ||
         numeroCuotas == null ||
-        numeroCuotas < 1 ||
-        numeroCuotas > 400) {
+        numeroCuotas < 2 ||
+        numeroCuotas > 10) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Verifica la deuda y el número de cuotas (1 a 400).'),
+          content: Text(
+            'La deuda debe estar entre 100.000 y 1.000.000. '
+            'Las cuotas deben estar entre 2 y 10.',
+          ),
         ),
       );
       return;
@@ -102,9 +109,8 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
       final firestore = FirebaseFirestore.instance;
       final fechaInicio = DateTime.now();
 
-      // Trabajamos en pesos enteros para evitar
-      // diferencias de redondeo en los valores.
-      final deudaPesos = (deuda * 100).round();
+      // Convertimos a centavos para conservar la lógica de distribución.
+      final deudaPesos = deuda * 100;
       final cuotaBase = deudaPesos ~/ numeroCuotas;
       final creditoRef = firestore.collection('creditos').doc();
 
@@ -122,8 +128,6 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
       });
 
       for (int i = 1; i <= numeroCuotas; i++) {
-        // La última cuota absorbe cualquier diferencia
-        // de redondeo para que la suma sea igual a la deuda.
         final valorCuotaPesos =
             i == numeroCuotas
                 ? deudaPesos - cuotaBase * (numeroCuotas - 1)
@@ -145,7 +149,6 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
         });
       }
 
-      // El crédito y sus cuotas se guardan juntos.
       await batch.commit();
 
       if (!mounted) return;
@@ -197,13 +200,6 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
           key: _formKey,
           child: ListView(
             children: [
-              Text(
-                'ID del cliente: ${widget.clienteId}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
               const SizedBox(height: 16),
 
               _campoDropdown(
@@ -263,11 +259,23 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
     TextEditingController controller, {
     TextInputType tipo = TextInputType.text,
   }) {
+    final esDeuda = label == 'Deuda total';
+    final esNumeroCuotas = label == 'Número de cuotas';
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
         controller: controller,
-        keyboardType: tipo,
+        keyboardType: TextInputType.number,
+        inputFormatters:
+            esDeuda
+                ? [FilteringTextInputFormatter.digitsOnly, FormatoMiles()]
+                : esNumeroCuotas
+                ? [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(2),
+                ]
+                : null,
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
@@ -279,17 +287,19 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
             return 'Este campo es obligatorio.';
           }
 
-          if (label == 'Deuda total') {
-            final valor = double.tryParse(value.trim());
-            if (valor == null || valor <= 0) {
-              return 'Ingresa una deuda mayor que cero.';
+          if (esDeuda) {
+            final valor = int.tryParse(value.replaceAll('.', '').trim());
+
+            if (valor == null || valor < 100000 || valor > 1000000) {
+              return 'La deuda debe estar entre 100.000 y 1.000.000.';
             }
           }
 
-          if (label == 'Número de cuotas') {
+          if (esNumeroCuotas) {
             final numero = int.tryParse(value.trim());
-            if (numero == null || numero < 1 || numero > 400) {
-              return 'Ingresa un número entre 1 y 400.';
+
+            if (numero == null || numero < 2 || numero > 10) {
+              return 'Ingresa un número de cuotas entre 2 y 10.';
             }
           }
 
@@ -322,6 +332,39 @@ class _CrearCreditoAdminState extends State<CrearCreditoAdmin> {
         onChanged: _cargando ? null : onChanged,
         validator: (value) => value == null ? 'Selecciona una opción.' : null,
       ),
+    );
+  }
+}
+
+class FormatoMiles extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final numeros = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (numeros.isEmpty) {
+      return newValue.copyWith(
+        text: '',
+        selection: const TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    final valor = int.tryParse(numeros);
+
+    if (valor == null || valor >= 1000000) {
+      return oldValue;
+    }
+
+    final textoFormateado = numeros.replaceAllMapped(
+      RegExp(r'\B(?=(\d{3})+(?!\d))'),
+      (match) => '.',
+    );
+
+    return TextEditingValue(
+      text: textoFormateado,
+      selection: TextSelection.collapsed(offset: textoFormateado.length),
     );
   }
 }
