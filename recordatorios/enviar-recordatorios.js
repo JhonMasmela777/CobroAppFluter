@@ -391,17 +391,17 @@ try {
     `Historial registrado correctamente para la cuota ${doc.id}.`
   );
 
-} catch (errorRegistro) {
+} } catch (errorRegistro) {
   console.error(
     `El correo se envió, pero no se pudo registrar el historial de la cuota ${doc.id}:`,
     errorRegistro
   );
 }
 
-    console.log(
-      `Correo aceptado por Resend para cuota ${doc.id}. ID: ${data?.id}`
-    );
   }
+
+  console.log('Proceso finalizado.');
+}
 
   console.log('Proceso finalizado.');
 }
