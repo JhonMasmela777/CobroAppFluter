@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class GestionCreditosAdmin extends StatefulWidget {
   @override
@@ -205,6 +206,9 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
               final credito = creditos[index];
               final docId = credito.id;
               final estado = credito['estado'];
+              final deuda = NumberFormat.decimalPattern(
+                'es_CO',
+              ).format((credito['deuda'] as num).toInt());
               final idCliente = credito['idCliente'];
 
               final asignadoA =
@@ -256,7 +260,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
 
                       SizedBox(height: 8),
                       Text('Artículo: ${credito['articulo']}'),
-                      Text('Deuda: \$${credito['deuda']}'),
+                      Text('Deuda: \$ $deuda'),
                       Text('Frecuencia de pago: ${credito['frecuenciaPago']}'),
                       Text('Estado actual: $estado'),
 
