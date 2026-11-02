@@ -130,18 +130,45 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
   Future<String> obtenerNombreCliente(String idCliente) async {
     try {
       final querySnapshot =
-          await clientesRef
-              .where('cedula', isEqualTo: idCliente)
-              .limit(1)
-              .get();
+          await clientesRef.where('uid', isEqualTo: idCliente).limit(1).get();
+
       if (querySnapshot.docs.isNotEmpty) {
         final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
+
         return data['nombreCompleto'] ?? 'Sin nombre';
-      } else {
-        return 'Cliente no encontrado';
       }
+
+      return 'Cliente no encontrado';
     } catch (e) {
+      debugPrint('ERROR AL OBTENER CLIENTE: $e');
       return 'Error al obtener nombre';
+    }
+  }
+
+  // Obtener el nombre del cobrador mediante su UID.
+  // cedulaCobradorAsignado en créditos contiene el UID.
+  // El UID se consulta en el campo uid de la colección usuarios.
+  Future<String> obtenerNombreCobrador(String uid) async {
+    try {
+      if (uid.isEmpty || uid == 'Sin asignar') {
+        return 'Sin asignar';
+      }
+
+      final querySnapshot =
+          await usuariosRef.where('uid', isEqualTo: uid).limit(1).get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
+
+        return data['nombreCompleto'] ??
+            data['nombre'] ??
+            'Nombre no disponible';
+      }
+
+      return 'Cobrador no encontrado';
+    } catch (e) {
+      debugPrint('ERROR OBTENIENDO NOMBRE DEL COBRADOR: $e');
+      return 'Error al obtener cobrador';
     }
   }
 
@@ -157,8 +184,8 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
         ),
         centerTitle: true,
         elevation: 0,
-        automaticallyImplyLeading: true, // Activamos el botón de atrás
-        leading: BackButton(color: Colors.white), // Flecha blanca
+        automaticallyImplyLeading: true,
+        leading: BackButton(color: Colors.white),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: creditosRef.snapshots(),
@@ -167,6 +194,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
             return Center(child: CircularProgressIndicator());
 
           final creditos = snapshot.data!.docs;
+
           if (creditos.isEmpty)
             return Center(child: Text('No hay créditos registrados.'));
 
@@ -181,7 +209,7 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
 
               final asignadoA =
                   credito.data().toString().contains('cedulaCobradorAsignado')
-                      ? credito['cedulaCobradorAsignado']
+                      ? credito['cedulaCobradorAsignado'].toString()
                       : 'Sin asignar';
 
               return Container(
@@ -208,12 +236,15 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                           if (snapshotNombre.connectionState ==
                               ConnectionState.waiting)
                             return Text('Cargando cliente...');
+
                           if (snapshotNombre.hasError)
                             return Text('Error al cargar cliente');
+
                           final nombreCliente =
                               snapshotNombre.data ?? 'Sin nombre';
+
                           return Text(
-                            'Cliente: $idCliente - $nombreCliente',
+                            'Cliente: $nombreCliente',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
@@ -222,13 +253,34 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                           );
                         },
                       ),
+
                       SizedBox(height: 8),
                       Text('Artículo: ${credito['articulo']}'),
                       Text('Deuda: \$${credito['deuda']}'),
                       Text('Frecuencia de pago: ${credito['frecuenciaPago']}'),
                       Text('Estado actual: $estado'),
-                      Text('Asignado a: $asignadoA'),
+
+                      // Mostrar el nombre del cobrador, no su UID.
+                      FutureBuilder<String>(
+                        future: obtenerNombreCobrador(asignadoA),
+                        builder: (context, snapshotCobrador) {
+                          if (snapshotCobrador.connectionState ==
+                              ConnectionState.waiting) {
+                            return Text('Cobrador asignado: Cargando...');
+                          }
+
+                          return Text(
+                            'Cobrador asignado: ${snapshotCobrador.data ?? 'Sin asignar'}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          );
+                        },
+                      ),
+
                       SizedBox(height: 16),
+
                       if (estado == 'Pendiente') ...[
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -267,7 +319,9 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                             ),
                           ],
                         ),
+
                         SizedBox(height: 10),
+
                         if (asignadoA == 'Sin asignar') ...[
                           cargandoCobradores
                               ? Center(child: CircularProgressIndicator())
@@ -280,25 +334,20 @@ class _GestionCreditosAdminState extends State<GestionCreditosAdmin> {
                                 },
                                 items:
                                     cobradores.map((usuario) {
+                                      final nombre =
+                                          usuario['nombreCompleto'] ??
+                                          usuario['nombre'] ??
+                                          'Sin nombre';
+
                                       return DropdownMenuItem<String>(
                                         value: usuario['id'],
                                         child: Text(
-                                          '${usuario['nombre']} (${usuario['cedula']})',
+                                          '$nombre (${usuario['cedula']})',
                                         ),
                                       );
                                     }).toList(),
                               ),
-                        ] else
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: Text(
-                              'Cobrador asignado: $asignadoA',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ),
+                        ],
                       ] else
                         Center(
                           child: Text(
