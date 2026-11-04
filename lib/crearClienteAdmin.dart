@@ -51,7 +51,12 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
   }
 
   Future<void> _crearCliente() async {
-    // VALIDAR QUE LA VIVIENDA ESTÉ UBICADA EN EL MAPA
+    // PRIORIDAD 1: VALIDAR LOS CAMPOS DEL FORMULARIO
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // PRIORIDAD 2: VALIDAR QUE LA VIVIENDA ESTÉ UBICADA EN EL MAPA
     if (!_ubicacionVerificada || _latitud == null || _longitud == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

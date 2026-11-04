@@ -1,6 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:cobro_app_flutter/detallePagoUsuario.dart';
+
+String _formatearMiles(dynamic valor) {
+  final numero = (valor as num?)?.round() ?? 0;
+  final texto = numero.abs().toString();
+  final buffer = StringBuffer();
+
+  for (int i = 0; i < texto.length; i++) {
+    if (i > 0 && (texto.length - i) % 3 == 0) {
+      buffer.write('.');
+    }
+    buffer.write(texto[i]);
+  }
+
+  return '${numero < 0 ? '-' : ''}${buffer.toString()}';
+}
+
+double? _parsearValor(String valor) {
+  final limpio = valor.trim().replaceAll('.', '');
+  return double.tryParse(limpio);
+}
+
+class FormatoMilesInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digitos = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+
+    if (digitos.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    final numero = int.parse(digitos);
+    final texto = _formatearMiles(numero);
+
+    return TextEditingValue(
+      text: texto,
+      selection: TextSelection.collapsed(offset: texto.length),
+    );
+  }
+}
 
 class PagoUsuario extends StatefulWidget {
   final String creditoId;
@@ -26,6 +72,7 @@ class PagoUsuario extends StatefulWidget {
 
 class _PagoUsuarioState extends State<PagoUsuario> {
   final TextEditingController _valorController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
 
   bool _guardando = false;
@@ -33,9 +80,7 @@ class _PagoUsuarioState extends State<PagoUsuario> {
   Future<void> _registrarAbono() async {
     if (_guardando || !_formKey.currentState!.validate()) return;
 
-    final valor = double.tryParse(
-      _valorController.text.trim().replaceAll(',', '.'),
-    );
+    final valor = _parsearValor(_valorController.text);
 
     if (valor == null || valor <= 0) return;
 
@@ -87,6 +132,7 @@ class _PagoUsuarioState extends State<PagoUsuario> {
           0.0,
           double.infinity,
         );
+
         final nuevoSaldoCredito = (saldoCredito - valor).clamp(
           0.0,
           double.infinity,
@@ -208,7 +254,7 @@ class _PagoUsuarioState extends State<PagoUsuario> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '\$${widget.saldoCuota.toStringAsFixed(0)}',
+                      '\$${_formatearMiles(widget.saldoCuota)}',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -233,9 +279,8 @@ class _PagoUsuarioState extends State<PagoUsuario> {
                 ),
                 child: TextFormField(
                   controller: _valorController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FormatoMilesInputFormatter()],
                   decoration: const InputDecoration(
                     labelText: 'Valor del abono',
                     border: OutlineInputBorder(
@@ -254,9 +299,7 @@ class _PagoUsuarioState extends State<PagoUsuario> {
                       return 'Por favor ingrese un valor';
                     }
 
-                    final v = double.tryParse(
-                      value.trim().replaceAll(',', '.'),
-                    );
+                    final v = _parsearValor(value);
 
                     if (v == null || v <= 0) {
                       return 'Ingrese un valor válido mayor que 0';

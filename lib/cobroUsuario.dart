@@ -2,6 +2,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:cobro_app_flutter/rutaCobroUsuario.dart';
 
+// Formatear valores con puntos de miles.
+String _formatearMiles(dynamic valor) {
+  final numero = (valor as num?)?.round() ?? 0;
+  final texto = numero.abs().toString();
+  final buffer = StringBuffer();
+
+  for (int i = 0; i < texto.length; i++) {
+    if (i > 0 && (texto.length - i) % 3 == 0) {
+      buffer.write('.');
+    }
+    buffer.write(texto[i]);
+  }
+
+  return '${numero < 0 ? '-' : ''}${buffer.toString()}';
+}
+
 class CobrosUsuario extends StatelessWidget {
   final String userId;
 
@@ -198,7 +214,7 @@ class CobrosUsuario extends StatelessWidget {
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          'Deuda: \$${deudaActual.toStringAsFixed(0)}\n'
+                          'Deuda: \$${_formatearMiles(deudaActual)}\n'
                           'Estado: $estado',
                         ),
                       ),

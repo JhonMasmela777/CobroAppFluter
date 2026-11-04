@@ -8,6 +8,22 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:cobro_app_flutter/pagoUsuario.dart';
 
+// Formatear valores con puntos de miles.
+String _formatearMiles(dynamic valor) {
+  final numero = (valor as num?)?.round() ?? 0;
+  final texto = numero.abs().toString();
+  final buffer = StringBuffer();
+
+  for (int i = 0; i < texto.length; i++) {
+    if (i > 0 && (texto.length - i) % 3 == 0) {
+      buffer.write('.');
+    }
+    buffer.write(texto[i]);
+  }
+
+  return '${numero < 0 ? '-' : ''}${buffer.toString()}';
+}
+
 class RutaCobroUsuario extends StatefulWidget {
   final String userId;
 
@@ -393,7 +409,7 @@ class _RutaCobroUsuarioState extends State<RutaCobroUsuario> {
                             '${cuota.articulo} - Cuota ${cuota.numeroCuota}',
                           ),
                           subtitle: Text(
-                            'Saldo pendiente: \$${cuota.saldoPendiente.toStringAsFixed(0)}',
+                            'Saldo pendiente: \$${_formatearMiles(cuota.saldoPendiente)}',
                           ),
                           trailing: const Icon(
                             Icons.arrow_forward_ios,
@@ -606,7 +622,8 @@ class _RutaCobroUsuarioState extends State<RutaCobroUsuario> {
                             subtitle: Text(
                               '${parada.direccion}\n'
                               'Cuotas para cobrar: ${parada.cuotas.length}\n'
-                              'Total de cuotas pendientes: \$${parada.deudaTotal.toStringAsFixed(0)}',
+                              'Total de cuotas pendientes: '
+                              '\$${_formatearMiles(parada.deudaTotal)}',
                             ),
                             isThreeLine: true,
                             trailing: const Icon(
