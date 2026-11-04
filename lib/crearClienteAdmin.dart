@@ -226,7 +226,7 @@ class _CrearClienteAdminState extends State<CrearClienteAdmin> {
                     padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                   ),
                   child: Text(
-                    'Crear Crédito',
+                    'Crear Cliente',
                     style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),

@@ -12,17 +12,17 @@ async function probarCorreo() {
   const { data, error } = await resend.emails.send({
     from: 'Cobra Tech <onboarding@resend.dev>',
     to: ['jonathancoloradomasmela@gmail.com'],
-    subject: 'Prueba de correo - Cobramzas',
+    subject: 'Prueba de correo - Cobra tech',
     text: [
       '¡Hola!',
       '',
-      'Este es un correo de prueba de Cobramzas.',
+      'Este es un correo de prueba de Coba tech.',
       'Estamos verificando la integración con Resend para preparar los recordatorios de cuotas.',
       '',
       'Todavía no se han activado los recordatorios automáticos para los clientes.',
       '',
       'Saludos,',
-      'Sistema Cobramzas',
+      'Sistema Cobra tech',
     ].join('\n'),
   });
 

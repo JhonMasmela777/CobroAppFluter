@@ -128,12 +128,6 @@ class _MenuUsuarioState extends State<MenuUsuario> {
                     (context) => HistorialPagosUsuario(userId: widget.userId),
               ),
             );
-          } else if (texto == 'Notificaciones') {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Funcionalidad de Notificaciones pendiente'),
-              ),
-            );
           }
         },
       ),
@@ -185,9 +179,8 @@ class _MenuUsuarioState extends State<MenuUsuario> {
 
             buildBoton(context, Icons.calendar_today, 'Cobros Del Día'),
             buildBoton(context, Icons.history, 'Historial De Pagos'),
-            buildBoton(context, Icons.notifications, 'Notificaciones'),
-            buildBoton(context, Icons.person, 'Mi Perfil'),
             buildBoton(context, Icons.person_add, 'Crear Cliente'),
+            buildBoton(context, Icons.person, 'Mi Perfil'),
           ],
         ),
       ),
